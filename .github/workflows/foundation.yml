@@ -1,0 +1,40 @@
+name: foundation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  repository-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify foundation contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            README.md
+            AGENTS.md
+            ROADMAP.md
+            docs/ARCHITECTURE.md
+            docs/LANGUAGE_PRESSURE.md
+            docs/TESTING.md
+            rfcs/0001-project-charter.md
+            rfcs/0002-deterministic-concurrent-indexing.md
+            rfcs/0003-canonical-index-model.md
+            rfcs/0004-query-model.md
+            rfcs/0005-incremental-watch-model.md
+            rfcs/0006-language-pressure-methodology.md
+            pressure/registry.md
+          )
+          for path in "${required[@]}"; do
+            test -s "$path" || { echo "missing or empty: $path"; exit 1; }
+          done
+          grep -q "Founding invariant" README.md
+          grep -q "incremental update and clean rebuild" rfcs/0005-incremental-watch-model.md
+          grep -q "No implementation-derived pressure findings" pressure/registry.md
