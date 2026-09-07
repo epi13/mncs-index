@@ -31,13 +31,15 @@ jobs:
               | python3 -c "import json,sys; d=json.load(sys.stdin); errs=[x for x in d['diagnostics'] if x.get('severity')=='error' or str(x.get('code',''))[:3] in ('MNE','MNB','MNP')]; assert not errs, errs; print('$kernel: clean')"
           done
       - name: Check pressure reproducers fail as documented
+        # Reproducers must fail elaboration (non-zero exit); swallow that
+        # so grep alone decides whether the documented diagnostic appears.
         run: |
           set -euo pipefail
-          mncs-language/target/debug/mncs source-study pressure/reproducers/traversal-u64-domain.mncs --node-id ci \
+          { mncs-language/target/debug/mncs source-study pressure/reproducers/traversal-u64-domain.mncs --node-id ci || true; } \
             | grep -q MNB101
-          mncs-language/target/debug/mncs source-study pressure/reproducers/int-bitwise-xor.mncs --node-id ci \
+          { mncs-language/target/debug/mncs source-study pressure/reproducers/int-bitwise-xor.mncs --node-id ci || true; } \
             | grep -q MNE103
-          mncs-language/target/debug/mncs source-study pressure/reproducers/nested-iterate.mncs --node-id ci \
+          { mncs-language/target/debug/mncs source-study pressure/reproducers/nested-iterate.mncs --node-id ci || true; } \
             | grep -q MNE147
 
   pytest:
