@@ -1,0 +1,17 @@
+mncs 0.10;
+
+// PRESS-006 probe: smallest legal verify-only SHA-256 program over the
+// NIST "abc" vector. Operands carry public data only; the executor
+// realizes `sha256_digest()` from an explicit `--grant-crypto` for the
+// named capability. Without a grant the call fails closed.
+// Expected: SHA-256("abc") =
+// ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+// Run: see reproducers/run-language-probes.sh (probe `sha256-abc`).
+module pressure.probe_sha256_abc;
+
+fn digest_message(msg: [byte; up_to 64]) -> (result: [byte; up_to 64])
+    capability verifier
+    effect sha256_digest authorized_by verifier
+{
+    return sha256_digest(msg);
+}

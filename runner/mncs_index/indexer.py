@@ -1,21 +1,31 @@
 """Snapshot construction: full builds and incremental updates.
 
 Full build: every file through the concurrent pipeline, then canonical
-merge. Incremental: hint-triage (size + crc32) reuses stored records for
-unchanged paths and runs the pipeline only for added/changed paths; every
+merge. Incremental: hint-triage (size + crc32) selects a candidate reuse
+set, but hints are never content truth — every hint-hit path is still run
+through the pipeline for authoritative MNCS-content validation, and stored
+records are reused only when the recomputed MNCS digest agrees; every
 keep/add/remove/modify verdict is an MNCS `classify_change` decision.
 """
 
 from __future__ import annotations
 
 from .bridge import Bridge
-from .discover import CorpusSnapshot, discover
+from .discover import CorpusSnapshot, discover_concurrent
+from .extract import (
+    build_rich,
+    extract_many,
+    filerich_from_records,
+    globalize,
+    path_extension,
+)
 from .kernels import Kernels
 from .model import (
     DocRecord,
     Snapshot,
     TermRecord,
     canonical_bytes,
+    canonical_bytes_v2,
     index_hash_of,
     mncs_fingerprint_of,
 )
@@ -66,13 +76,109 @@ def finalize(
     return snap, data
 
 
+def finalize_v2(
+    kernels: Kernels,
+    snapshot_id: str,
+    generation: int,
+    docs,
+    terms,
+    tables,
+    with_mncs_digest: bool = True,
+    fp_workers: int = 8,
+) -> tuple[Snapshot, bytes]:
+    """Assemble a canonical-v2 snapshot: v1 tables plus rich tables.
+
+    Hashes cover the v2 bytes (v2 marker + v1-identical doc/term section
+    + rich section). Degradation rule (RFC 0007): when every rich table
+    is empty there is no v2 meaning to carry, so this delegates to
+    `finalize` and returns byte-identical v1 bytes — an empty v2
+    projection hashes exactly like its v1 snapshot, and `Store.publish`
+    (which classifies by row presence) validates it on the v1 path
+    instead of rejecting it.
+    """
+    if not (tables.syms or tables.headings or tables.rels or tables.press):
+        return finalize(
+            kernels,
+            snapshot_id,
+            generation,
+            docs,
+            terms,
+            with_mncs_digest=with_mncs_digest,
+            fp_workers=fp_workers,
+        )
+    snap = Snapshot(
+        snapshot_id=snapshot_id,
+        generation=generation,
+        docs=docs,
+        terms=terms,
+        syms=tables.syms,
+        headings=tables.headings,
+        rels=tables.rels,
+        press=tables.press,
+    )
+    data = canonical_bytes_v2(snap.sorted_all_records(), snapshot_id)
+    snap.index_hash = index_hash_of(data)
+    snap.mncs_fingerprint = (
+        f"{mncs_fingerprint_of(kernels, data, fp_workers):016x}"
+        if with_mncs_digest
+        else ""
+    )
+    return snap, data
+
+
+def _rich_files(corpus: CorpusSnapshot, kernels: Kernels) -> list[tuple[str, int, bytes]]:
+    """(path, kind, data) triples for extraction; kind ranks come from
+    the same extension rule as pipeline planning."""
+    return [
+        (it.path, kernels.classify_kind(path_extension(it.path)), it.data)
+        for it in corpus.items
+    ]
+
+
+def build_snapshot_v2(
+    root: str,
+    generation: int,
+    kernels: Kernels,
+    config: BuildConfig,
+) -> tuple[Snapshot, bytes, CorpusSnapshot, Bridge]:
+    """Full v2 build: the untouched v1 full build plus concurrent rich
+    extraction over the same corpus, merged deterministically."""
+    snap_v1, _data_v1, corpus, bridge = build_snapshot(root, generation, kernels, config)
+    tables = build_rich(_rich_files(corpus, kernels), kernels, config.workers)
+    snap, data = finalize_v2(
+        kernels,
+        corpus.snapshot_id,
+        generation,
+        snap_v1.docs,
+        snap_v1.terms,
+        tables,
+        with_mncs_digest=config.mncs_digest,
+        fp_workers=config.workers,
+    )
+    return snap, data, corpus, bridge
+
+
+def _acquire(root: str, config: BuildConfig) -> CorpusSnapshot:
+    """Genuinely concurrent host content acquisition (temporary
+    PRESS-backed infra, PRESS-001/002/003): enumeration -> bounded read
+    queue -> parallel readers. Deterministic source identity is preserved
+    (sorted items, identity from sorted entries); the caller's
+    worker/queue budget bounds both this stage and the kernel stage."""
+    return discover_concurrent(
+        root,
+        readers=max(1, config.workers),
+        queue_size=config.queue_size,
+        cancel_event=config.cancel_event,
+    )
+
+
 def build_snapshot(
     root: str,
     generation: int,
     kernels: Kernels,
     config: BuildConfig,
 ) -> tuple[Snapshot, bytes, CorpusSnapshot, Bridge]:
-    corpus = discover(root)
+    corpus = _acquire(root, config)
     pipeline = Pipeline(kernels, config)
     results = pipeline.build_all(corpus)
     docs, terms = results_to_records(results)
@@ -98,10 +204,16 @@ def incremental_snapshot(
 ) -> tuple[Snapshot, bytes, CorpusSnapshot, dict[str, int]]:
     """Update `previous` to the current corpus state.
 
+    Size/CRC32 are cheap triage hints only, never content truth: a
+    hint-hit path is queued for authoritative MNCS-content validation
+    through the pipeline, and its stored record is reused only if the
+    recomputed MNCS digest agrees (verdict 0). A same-size CRC32
+    collision therefore surfaces as a modify (3), never stale reuse.
+
     Returns (snapshot, canonical_bytes, corpus, change_verdicts) where
     change_verdicts maps path -> MNCS classify_change code.
     """
-    corpus = discover(root)
+    corpus = _acquire(root, config)
     old_docs = {d.path: d for d in previous.docs}
     old_terms: dict[str, list[TermRecord]] = {}
     for t in previous.terms:
@@ -122,12 +234,12 @@ def incremental_snapshot(
             and len(new.data) == old.size
             and new.crc == previous_crc.get(path)
         ):
-            code = kernels.classify_change(True, old.digest, True, old.digest)
-            if code != 0:
-                raise BuildFailed(f"hint-unchanged path disagrees: {path}")
-            verdicts[path] = code
-            reused_docs.append(old)
-            reused_terms.extend(old_terms.get(path, []))
+            # Hint-hit: candidate for reuse, NOT proof of sameness.
+            # Queue the current bytes for authoritative validation; the
+            # verdict is decided after the fresh MNCS digest lands, and
+            # reuse happens only on digest agreement (see below).
+            fresh.append((path, new.data))
+            verdicts[path] = -1  # decided after the fresh digest lands
         elif old is not None and new is not None:
             fresh.append((path, new.data))
             verdicts[path] = -1  # decided after the fresh digest lands
@@ -155,8 +267,11 @@ def incremental_snapshot(
             if code not in (0, 3):
                 raise BuildFailed(f"change verdict wrong at {path}: {code}")
             if code == 0:
-                # Content-identical despite a hint change (size/crc moved
-                # but MNCS digests agree): reuse stored records verbatim.
+                # Authoritative MNCS digests agree — content-identical,
+                # whether the hints hit (validated reuse) or moved (hint
+                # change with identical content): reuse stored records
+                # verbatim. Any digest disagreement is verdict 3, so a
+                # same-size CRC32 collision can never reuse stale records.
                 fresh_docs = [d for d in fresh_docs if d.path != path]
                 fresh_terms = [t for t in fresh_terms if t.path != path]
                 reused_docs.append(old)
@@ -171,6 +286,51 @@ def incremental_snapshot(
         generation,
         docs,
         terms,
+        with_mncs_digest=config.mncs_digest,
+        fp_workers=config.workers,
+    )
+    return snap, data, corpus, verdicts
+
+
+def incremental_snapshot_v2(
+    root: str,
+    generation: int,
+    previous: Snapshot,
+    previous_crc: dict[str, int],
+    kernels: Kernels,
+    config: BuildConfig,
+) -> tuple[Snapshot, bytes, CorpusSnapshot, dict[str, int]]:
+    """Update a v2 snapshot to the current corpus state.
+
+    The v1 incremental transaction (untouched above) decides
+    docs/terms/verdicts. Rich rows follow content identity: verdict-0
+    paths reuse the previous rich rows verbatim (extraction is a pure
+    function of content, so identical bytes mean identical rows);
+    added/modified paths are re-extracted; removed paths drop. The merge
+    is the same deterministic `globalize`, so incremental == rebuild.
+    """
+    snap_v1, _data_v1, corpus, verdicts = incremental_snapshot(
+        root, generation, previous, previous_crc, kernels, config
+    )
+    current = {it.path: it for it in corpus.items}
+    per_file = {}
+    fresh: list[tuple[str, int, bytes]] = []
+    for path, item in current.items():
+        if verdicts.get(path) == 0:
+            per_file[path] = filerich_from_records(path, previous)
+        else:
+            fresh.append(
+                (path, kernels.classify_kind(path_extension(path)), item.data)
+            )
+    per_file.update(extract_many(fresh, kernels, config.workers))
+    merged = globalize(per_file)
+    snap, data = finalize_v2(
+        kernels,
+        corpus.snapshot_id,
+        generation,
+        snap_v1.docs,
+        snap_v1.terms,
+        merged,
         with_mncs_digest=config.mncs_digest,
         fp_workers=config.workers,
     )

@@ -74,10 +74,33 @@ def workdir(tmp_path):
 
 def full_build(kernels, corpus_dir, store_dir, generation=0, **cfg_kwargs):
     cfg = BuildConfig(**cfg_kwargs)
-    snap, canon, corpus, _ = build_snapshot(corpus_dir, generation, kernels, cfg)
     store = Store(store_dir)
+    # Capture the CAS base before the build: the candidate is only
+    # publishable if HEAD has not moved underneath it.
+    base = store.head()
+    snap, canon, corpus, _ = build_snapshot(corpus_dir, generation, kernels, cfg)
     established = {d.path: generation for d in snap.docs}
-    store.publish(snap, canon, established, {it.path: it.crc for it in corpus.items})
+    store.publish(
+        snap, canon, established, {it.path: it.crc for it in corpus.items}, base
+    )
+    return snap, canon, corpus
+
+
+def full_build_v2(kernels, corpus_dir, store_dir, generation=0, **cfg_kwargs):
+    from mncs_index.indexer import build_snapshot_v2
+
+    cfg = BuildConfig(**cfg_kwargs)
+    store = Store(store_dir)
+    base = store.head()
+    snap, canon, corpus, _ = build_snapshot_v2(corpus_dir, generation, kernels, cfg)
+    established = {}
+    if base is not None:
+        _, established, _ = store.load_head()
+    for d in snap.docs:
+        established.setdefault(d.path, generation)
+    store.publish(
+        snap, canon, established, {it.path: it.crc for it in corpus.items}, base
+    )
     return snap, canon, corpus
 
 

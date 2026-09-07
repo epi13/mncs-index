@@ -39,6 +39,7 @@ def branch(baseline, tmp_path):
 def _incremental(kernels, corpus_dir, store_dir, generation):
     store = Store(store_dir)
     prev, established, prev_crc = store.load_head()
+    base = prev.generation if prev is not None else None
     snap, canon, corpus, verdicts = incremental_snapshot(
         corpus_dir,
         generation,
@@ -50,7 +51,9 @@ def _incremental(kernels, corpus_dir, store_dir, generation):
     estat = dict(established)
     for d in snap.docs:
         estat.setdefault(d.path, generation)
-    store.publish(snap, canon, estat, {it.path: it.crc for it in corpus.items})
+    store.publish(
+        snap, canon, estat, {it.path: it.crc for it in corpus.items}, base
+    )
     return snap, canon, verdicts
 
 
@@ -128,6 +131,85 @@ def test_chained_incrementals(kernels, branch):
     assert inc.index_hash == ref.index_hash
 
 
+def _mutate_keep_size(corpus_dir: str, rel: str) -> bytes:
+    """Rewrite `rel` with different bytes of identical length."""
+    import os
+
+    full = os.path.join(corpus_dir, rel)
+    with open(full, "rb") as fh:
+        original = fh.read()
+    mutated = bytearray(original)
+    mutated[0] ^= 0x01
+    mutated[-1] ^= 0x02
+    assert bytes(mutated) != original
+    write_file(corpus_dir, rel, bytes(mutated))
+    return original
+
+
+def test_same_size_change_detected(kernels, branch):
+    """Same-size content change: verdict 3 + fresh digest, never stale."""
+    corpus_dir, store_dir = branch
+    prev, _, _ = Store(store_dir).load_head()
+    old_doc = next(d for d in prev.docs if d.path == "b.md")
+    original = _mutate_keep_size(corpus_dir, "b.md")
+    inc, _, verdicts = _incremental(kernels, corpus_dir, store_dir, 1)
+    assert verdicts["b.md"] == 3
+    new_doc = next(d for d in inc.docs if d.path == "b.md")
+    assert new_doc.size == old_doc.size == len(original)
+    assert new_doc.digest != old_doc.digest
+    ref, _ = rebuild_bytes(kernels, corpus_dir, workers=2, seed=3, mncs_digest=False)
+    assert inc.index_hash == ref.index_hash
+    assert [(d.path, d.digest) for d in inc.docs] == [
+        (d.path, d.digest) for d in ref.docs
+    ]
+
+
+def test_simulated_crc32_collision_detected(kernels, branch):
+    """A same-size CRC32 collision can never reuse stale records.
+
+    CRC32 is never canonical truth: the stored hint is forced to match
+    the mutated bytes (exactly what a real collision would present —
+    never relying on CRC rarity), and the incremental build must still
+    report modified (3) with the fresh MNCS digest, identical to a
+    clean rebuild.
+    """
+    from mncs_index.model import crc32_of
+
+    corpus_dir, store_dir = branch
+    prev, established, prev_crc = Store(store_dir).load_head()
+    old_doc = next(d for d in prev.docs if d.path == "b.md")
+    original = _mutate_keep_size(corpus_dir, "b.md")
+    with open(f"{corpus_dir}/b.md", "rb") as fh:
+        new_bytes = fh.read()
+    assert len(new_bytes) == len(original)
+    # Simulate the collision: the hint claims the new bytes are unchanged.
+    prev_crc = dict(prev_crc)
+    prev_crc["b.md"] = crc32_of(new_bytes)
+    snap, canon, corpus, verdicts = incremental_snapshot(
+        corpus_dir,
+        1,
+        prev,
+        prev_crc,
+        kernels,
+        BuildConfig(workers=4, seed=7, mncs_digest=False),
+    )
+    assert verdicts["b.md"] == 3
+    new_doc = next(d for d in snap.docs if d.path == "b.md")
+    assert new_doc.size == old_doc.size == len(original)
+    assert new_doc.digest != old_doc.digest
+    estat = dict(established)
+    for d in snap.docs:
+        estat.setdefault(d.path, 1)
+    Store(store_dir).publish(
+        snap, canon, estat, {it.path: it.crc for it in corpus.items}, prev.generation
+    )
+    ref, _ = rebuild_bytes(kernels, corpus_dir, workers=2, seed=3, mncs_digest=False)
+    assert snap.index_hash == ref.index_hash
+    assert [(d.path, d.digest) for d in snap.docs] == [
+        (d.path, d.digest) for d in ref.docs
+    ]
+
+
 def test_incremental_carries_mncs_fingerprint(kernels, branch):
     """One end-to-end incremental run with full MNCS fingerprints."""
     from mncs_index.indexer import incremental_snapshot
@@ -145,7 +227,11 @@ def test_incremental_carries_mncs_fingerprint(kernels, branch):
     for d in snap.docs:
         estat.setdefault(d.path, 1)
     store.publish(
-        snap, canon, estat, {it.path: it.crc for it in discover(corpus_dir).items}
+        snap,
+        canon,
+        estat,
+        {it.path: it.crc for it in discover(corpus_dir).items},
+        prev.generation,
     )
     ref, _ = rebuild_bytes(kernels, corpus_dir, workers=2, seed=3)
     assert snap.mncs_fingerprint and ref.mncs_fingerprint

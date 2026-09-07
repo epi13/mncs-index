@@ -3,10 +3,13 @@
 Architecture (mirrors docs/ARCHITECTURE.md; every stage here is a stand-in
 for missing MNCS effects — pressure/PRESS-001..003):
 
-    discovery (bytes in hand)
+    enumeration (single thread: walk, normalize, admit; discover.py)
         |
         v
-    read pool (files -> window/token work items) --+
+    bounded read queue -> parallel file readers (bytes in hand; discover.py)
+        |
+        v
+    plan pool (files -> window/token work items) --+
         |                                           | bounded queue
         v                                           | (backpressure real)
     kernel pool (ONE MNCS `execute` per item)  -----+
@@ -37,7 +40,10 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 from .discover import CorpusSnapshot
+from .errors import BuildCancelled, BuildFailed
 from .kernels import Kernels
+
+__all__ = ["BuildConfig", "BuildFailed", "BuildCancelled", "FileResult", "Pipeline"]
 
 WINDOW = 64
 TOKEN_MAX = 32
@@ -55,6 +61,11 @@ class BuildConfig:
     seed: int | None = None
     delay_ms: float = 0.0
     cancel_event: threading.Event | None = None
+    # `workers` also bounds the parallel file-reader threads and
+    # `queue_size` also bounds the discovery read queue: one shared host
+    # budget across acquisition (discover.py) and kernel execution
+    # (below), so a single --workers/--queue-size pair saturates both
+    # stages together (temporary PRESS-backed sizing).
     # Compute the MNCS canonical fingerprint (one kernel call per 64
     # canonical bytes). Disable for config-sweep builds: byte-equality of
     # canonical output plus dedicated fingerprint tests carry the claim.
@@ -78,14 +89,6 @@ class FilePlan:
     kind: int
     windows: list[bytes]
     tokens: list[bytes]  # distinct, sorted, capped, validated later
-
-
-class BuildFailed(Exception):
-    pass
-
-
-class BuildCancelled(Exception):
-    pass
 
 
 @dataclass
@@ -137,15 +140,12 @@ class Pipeline:
 
     # -- planning (host plumbing; semantic verdicts stay in MNCS) ---------
     def _plan_file(self, file_id: int, path: str, data: bytes) -> FilePlan:
-        name = path.rsplit("/", 1)[-1]
-        ext = (
-            name.rsplit(".", 1)[-1].lower().encode()
-            if "." in name and not name.startswith(".")
-            else b""
-        )
-        if len(ext) > 8:
-            ext = b""
-        kind = self.k.classify_kind(ext)
+        # Extension slicing is shared with the v2 extractor
+        # (`extract.path_extension`): planner and extractor must map a
+        # path to the same kind rank.
+        from .extract import path_extension
+
+        kind = self.k.classify_kind(path_extension(path))
         windows = [data[o : o + WINDOW] for o in range(0, len(data), WINDOW)]
         tokens = self._split_tokens(data, self.k.byte_class)
         return FilePlan(file_id, path, data, kind, windows, tokens)
@@ -258,19 +258,19 @@ class Pipeline:
                 finally:
                     work.task_done()
 
-        n_read = max(1, min(self.cfg.workers, max(1, len(plans))))
+        n_plan = max(1, min(self.cfg.workers, max(1, len(plans))))
         n_kern = max(1, self.cfg.workers)
-        read_pool = ThreadPoolExecutor(
-            max_workers=n_read, thread_name_prefix="mncs-read"
+        plan_pool = ThreadPoolExecutor(
+            max_workers=n_plan, thread_name_prefix="mncs-plan"
         )
         kern_pool = ThreadPoolExecutor(
             max_workers=n_kern, thread_name_prefix="mncs-kern"
         )
         try:
             consumers = [kern_pool.submit(consume) for _ in range(n_kern)]
-            chunks = [plans[i::n_read] for i in range(n_read)]
+            chunks = [plans[i::n_plan] for i in range(n_plan)]
             producers = [
-                read_pool.submit(self._produce_chunk, produce, c) for c in chunks
+                plan_pool.submit(self._produce_chunk, produce, c) for c in chunks
             ]
             for fut in producers:
                 fut.result()
@@ -279,7 +279,7 @@ class Pipeline:
             for fut in consumers:
                 fut.result()
         finally:
-            read_pool.shutdown(wait=True, cancel_futures=True)
+            plan_pool.shutdown(wait=True, cancel_futures=True)
             kern_pool.shutdown(wait=True, cancel_futures=True)
         if self._errors:
             exc = self._errors[0]

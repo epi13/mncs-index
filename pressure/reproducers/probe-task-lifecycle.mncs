@@ -1,0 +1,31 @@
+mncs 0.10;
+
+// PRESS-001 probe: smallest legal `mncs.std.task.v1` lifecycle use from
+// the fast `execute` path (no grants: pure bounded computation).
+// Verdict: the cooperative single-task vocabulary (spawn/begin/advance/
+// finish, cancel flag, step budget) is fully usable at per-call cost —
+// it expresses lifecycle states and transitions, but no threads, pools,
+// channels, or fan-out, so PRESS-001 stays open.
+// Run: see reproducers/run-language-probes.sh (probe `task`).
+module pressure.probe_task_lifecycle;
+
+use mncs.std.task.v1 as task;
+
+// Happy path: spawn(8) -> begin -> 8 advances -> finish is DONE/terminal.
+fn lifecycle_done() -> (result: bool) {
+    let done: task.Task = task.candidate_lifecycle(8);
+    return task.is_terminal(done);
+}
+
+// Operator abort: cancel arms the flag; the next boundary goes CANCELLED
+// (terminal, `was_cancelled`), and `finish` on it is rejected.
+fn cancel_terminal() -> (result: bool) {
+    let stopped: task.Task = task.candidate_cancel(8);
+    return task.was_cancelled(stopped);
+}
+
+// Invalid transitions reject without trapping: advance-on-READY,
+// double-begin, and finish-on-READY pack to flags 0.
+fn invalid_rejected() -> (result: i64) {
+    return task.candidate_invalid();
+}

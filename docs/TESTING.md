@@ -68,6 +68,17 @@ All execution goes through the reference executor via `mncs execute`
 - Overlap proof: bridge `max_in_flight >= 2` asserted on a real build.
 - Incremental equivalence: add/remove/change/rename/unchanged/multi/chained
   (`test_incremental.py`).
+- Graph invalidation: v2 records *and* relationships converge to clean
+  rebuild across add/remove/rename/disappear/fan-out/use-cycles, with
+  query agreement (`depends_on`/`dependents`/`defines`/`references`/
+  `pressure`) and deterministic rename lineage (`moved` only for
+  provable 1:1 content-identity matches; ambiguity stays remove+add)
+  (`test_graph_invalidation.py`, `runner/mncs_index/lineage.py`).
+- Snapshot isolation: a query engine binds one snapshot across
+  publishes, many concurrent readers observe only complete
+  hash-validated generations, and `limit` is truncation metadata
+  (`total` + `limited` + prefix) rather than cancellation
+  (`test_snapshot_isolation.py`).
 - Differential: kernels vs independent oracles on seeded random inputs;
   this caught a real word-boundary merge bug before review.
 - Failure: injected worker failure, starved step budget, broken binary,

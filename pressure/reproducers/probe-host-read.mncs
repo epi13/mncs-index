@@ -1,0 +1,17 @@
+mncs 0.10;
+
+// PRESS-003 probe: smallest legal granted file-read program.
+// Authority is declared, never ambient: the function names its capability
+// and its `host_read` effect; the executor realizes `host_read()` from an
+// explicit `--grant-read <capability>=<path>` (bytes bounded to 64).
+// Without a grant the call fails closed (status `unsupported`).
+// Run: see reproducers/run-language-probes.sh (probe `host-read`).
+module pressure.probe_host_read;
+
+fn blob_len() -> (result: u64)
+    capability probe_reader
+    effect host_read authorized_by probe_reader
+{
+    let blob: [byte; up_to 64] = host_read();
+    return blob.len;
+}

@@ -60,6 +60,10 @@ An immutable logical view produced by deterministic normalization, ordering, con
 
 The snapshot visible to queries. Publication should be atomic at the logical level: readers should not observe half-merged state.
 
+### Rename lineage
+
+Change verdicts never guess renames: a disappeared path is removed and a new path is added. Lineage (`runner/mncs_index/lineage.py`) is an advisory layer over those verdicts, keyed by authoritative MNCS content digests: exactly one removed and one added path sharing a digest links as `moved`; every ambiguous shape (no match, duplicates, splits, merges) stays unlinked remove+add. `build --incremental` reports lineage alongside verdicts.
+
 ## Concurrency layers
 
 1. **Discovery concurrency** — enumerate independent roots/partitions.
@@ -102,10 +106,12 @@ The initial implementation should prioritize semantic correctness over storage s
   folds and Merkle combines (`digest.mncs`), byte classes and token
   validation (`scan.mncs`), kind ranks (`kind.mncs`), ordering/matching/
   change verdicts (`order.mncs`).
-- The host runner (`runner/mncs_index/`) is two thread pools (read +
-  kernel) joined by a bounded `queue.Queue`, per-file ordered assembly, a
-  canonical sort, and atomic publication. See `runner/README.md` for the
-  per-module pressure map.
+- The host runner (`runner/mncs_index/`) is a bounded parallel
+  file-reader stage (`discover.py`: enumeration -> bounded read queue ->
+  reader threads) feeding plan/kernel pools (`pipeline.py`: bounded
+  semantic queue, per-file ordered assembly), a canonical sort, and
+  atomic publication. See `runner/README.md` for the per-module
+  pressure map.
 - Work item = one file; kernel item = one MNCS `execute` call (one 64 B
   window, one 8-token validation batch, one predicate). Intra-file calls
   are ordered by construction; inter-file execution is fully parallel.
@@ -116,8 +122,15 @@ The initial implementation should prioritize semantic correctness over storage s
   generation is store metadata. Term identity is (path, token) with an
   MNCS content tag; file binding travels through the sort key and parent
   digest.
-- Known simplifications: no inter-file reference edges yet (so no
-  dependency invalidation graph), renames surface as remove+add,
-  substring queries beyond 8 B use the differentially-tested host path,
-  and large-file economics are bounded by one-subprocess-per-call
+- Known simplifications: renames surface as remove+add, substring
+  queries beyond 8 B use the differentially-tested host path, and
+  large-file economics are bounded by one-subprocess-per-call
   (PRESS-010).
+- canonical-v2 (RFC 0007, additive): `src/extract.mncs` decides
+  declarations/headings/link-seams/PRESS-RFC shapes;
+  `runner/mncs_index/extract.py` applies them per line and merges by
+  record identity (`globalize`); relationships are single-hop edges
+  (`defines`/`references`/`depends-on`/`rfc-ref`) with deterministic
+  dedup — dependency *invalidation* (transitive sets) is still future
+  (PRESS-015). v1 bytes are embedded byte-identically; the default build
+  stays v1 (`build --rich` opts into v2).

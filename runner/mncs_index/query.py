@@ -26,10 +26,20 @@ class QueryResult:
 
 
 class QueryEngine:
-    def __init__(self, snap: Snapshot, kernels: Kernels, workers: int = 4):
+    def __init__(
+        self,
+        snap: Snapshot,
+        kernels: Kernels,
+        workers: int = 4,
+        established: dict | None = None,
+    ):
         self.snap = snap
         self.k = kernels
         self.workers = max(1, workers)
+        # Per-path establishment generations (store sidecar, non-canonical
+        # publication metadata): backs `provenance`. Empty when the caller
+        # has no store handle; v1 queries never touch it.
+        self.established = dict(established) if established else {}
         self.path_index = {d.path: d for d in snap.docs}
         self.digest_index: dict[int, list] = {}
         for d in snap.docs:
@@ -40,6 +50,27 @@ class QueryEngine:
         self.tokens_by_doc: dict[str, list[str]] = {}
         for t in snap.terms:
             self.tokens_by_doc.setdefault(t.path, []).append(t.token)
+        # canonical-v2 indexes (empty on v1 snapshots).
+        self.sym_by_name: dict[str, list] = {}
+        self.sym_by_path: dict[str, list] = {}
+        for r in snap.syms:
+            self.sym_by_name.setdefault(r.name, []).append(r)
+            self.sym_by_path.setdefault(r.path, []).append(r)
+        self.rel_by_src: dict[str, list] = {}
+        self.rel_by_dst: dict[str, list] = {}
+        self.rel_by_kind: dict[str, list] = {}
+        for r in snap.rels:
+            self.rel_by_src.setdefault(r.src, []).append(r)
+            self.rel_by_dst.setdefault(r.dst, []).append(r)
+            self.rel_by_kind.setdefault(r.rel, []).append(r)
+        self.headings_by_path: dict[str, list] = {}
+        for r in snap.headings:
+            self.headings_by_path.setdefault(r.path, []).append(r)
+        self.press_by_id: dict[str, list] = {}
+        self.press_by_path: dict[str, list] = {}
+        for r in snap.press:
+            self.press_by_id.setdefault(r.pid, []).append(r)
+            self.press_by_path.setdefault(r.path, []).append(r)
 
     def _finish(self, docs: list, limit: int | None) -> QueryResult:
         docs = sorted(docs, key=lambda d: d.sort_key())
@@ -68,6 +99,83 @@ class QueryEngine:
 
     def by_kind(self, kind: int, limit=None) -> QueryResult:
         return self._finish(list(self.kind_index.get(kind, [])), limit)
+
+    # -- canonical-v2 queries (RFC 0004 relationship/provenance classes) --
+    def _finish_rich(self, records: list, limit=None) -> QueryResult:
+        ordered = sorted(records, key=lambda r: r.sort_key())
+        total = len(ordered)
+        limited = False
+        if limit is not None and len(ordered) > limit:
+            ordered = ordered[:limit]
+            limited = True
+        return QueryResult(
+            snapshot_id=self.snap.snapshot_id,
+            generation=self.snap.generation,
+            records=ordered,
+            total=total,
+            limited=limited,
+        )
+
+    def defines(self, name: str, limit=None) -> QueryResult:
+        """`defines` edges whose target is `name` (who defines it)."""
+        hits = [r for r in self.rel_by_dst.get(name, []) if r.rel == "defines"]
+        return self._finish_rich(hits, limit)
+
+    def references(self, dst: str, limit=None) -> QueryResult:
+        """`references` edges pointing at `dst` (symbol, target, or file)."""
+        hits = [r for r in self.rel_by_dst.get(dst, []) if r.rel == "references"]
+        return self._finish_rich(hits, limit)
+
+    def depends_on(self, path: str, limit=None) -> QueryResult:
+        """`depends-on` edges out of `path` (what it needs)."""
+        hits = [r for r in self.rel_by_src.get(path, []) if r.rel == "depends-on"]
+        return self._finish_rich(hits, limit)
+
+    def dependents(self, dst: str, limit=None) -> QueryResult:
+        """`depends-on` edges pointing at `dst` (who needs it)."""
+        hits = [r for r in self.rel_by_dst.get(dst, []) if r.rel == "depends-on"]
+        return self._finish_rich(hits, limit)
+
+    def rfc_refs(self, num: str, limit=None) -> QueryResult:
+        """`rfc-ref` edges for one RFC number, e.g. "0003"."""
+        hits = [r for r in self.rel_by_dst.get(num, []) if r.rel == "rfc-ref"]
+        return self._finish_rich(hits, limit)
+
+    def pressure(self, pid: str, limit=None) -> QueryResult:
+        """Pressure-registry mentions of one ID, e.g. "PRESS-001"."""
+        return self._finish_rich(list(self.press_by_id.get(pid, [])), limit)
+
+    def symbols(self, name: str, limit=None) -> QueryResult:
+        """Source declarations of one symbol name across the corpus."""
+        return self._finish_rich(list(self.sym_by_name.get(name, [])), limit)
+
+    def headings_for(self, path: str, limit=None) -> QueryResult:
+        """Section headings of one document, in document order."""
+        return self._finish_rich(list(self.headings_by_path.get(path, [])), limit)
+
+    def provenance(self, path: str) -> dict:
+        """Where one path's fact came from: snapshot identity, doc digest,
+        and the establishment generation from the store sidecar (which
+        publish event first carried the path). Unknown paths report
+        `found: False` rather than raising."""
+        doc = self.path_index.get(path)
+        if doc is None:
+            return {
+                "snapshot_id": self.snap.snapshot_id,
+                "generation": self.snap.generation,
+                "path": path,
+                "found": False,
+                "established_generation": self.established.get(path),
+            }
+        return {
+            "snapshot_id": self.snap.snapshot_id,
+            "generation": self.snap.generation,
+            "path": path,
+            "found": True,
+            "digest": f"{doc.digest & ((1 << 64) - 1):016x}",
+            "size": doc.size,
+            "established_generation": self.established.get(path),
+        }
 
     def term_substring(self, term: str, limit=None) -> QueryResult:
         needle = term.encode("utf-8")

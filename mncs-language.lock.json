@@ -1,0 +1,8 @@
+{
+  "schema_version": "0.1",
+  "repository": "https://github.com/epi13/mncs-language",
+  "revision": "0eeafdd6116158dde6529c148ae74a362990325a",
+  "backend": "mncs-cli",
+  "source_profile": "0.8",
+  "purpose": "Pinned executor revision for deterministic mncs-index builds, CI, and evidence"
+}

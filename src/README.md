@@ -12,6 +12,7 @@ express; every such effect maps to a `pressure/` entry.
 | `scan.mncs` | `mncs.index.scan.v1` | Byte classes, symbol validation, token digests, batch validation |
 | `kind.mncs` | `mncs.index.kind.v1` | Extension bytes to canonical kind rank |
 | `order.mncs` | `mncs.index.order.v1` | Lexicographic compare, record order, query match, change verdicts |
+| `extract.mncs` | `mncs.index.extract.v1` | Decl keywords, heading levels, link seams, PRESS/RFC token shapes |
 
 All four target Source Profile 0.8, are dependency-free (no `use`
 imports, so `mncs execute` needs no library search path), and elaborate
@@ -42,3 +43,14 @@ cross-checked against independent oracles on seeded random inputs by
   6 text, 7 log, 100 term. Ranks are frozen — additions append only.
 - Token rule: `[A-Za-z_][A-Za-z0-9_]*`, length 1–32; per-file distinct
   tokens sorted, capped at 256.
+- Extraction (`extract.mncs`, canonical-v2): the kernel sees one
+  left-trimmed line prefix (≤64 B; the host trims leading space/tab).
+  `classify_decl` matches `module`/`fn`/`record`/`use` at position 0
+  followed by space/tab; `heading_level` counts 1–6 leading `#` plus a
+  space (7+ is text, per CommonMark); `contains_link` scans for a `](`
+  seam; `is_press_id` accepts exactly `PRESS-` + 3 digits;
+  `classify_rfc_token` shapes `RFC`/`RFCS`/4-digit tokens (host pairs
+  adjacent keyword+number tokens into `rfc-ref` edges). Declaration
+  names are dotted symbol runs (≤64 B total) with every segment an
+  `is_symbol_token` verdict; overlong/invalid/undecodable names, titles,
+  and link targets are skipped, never truncated (PRESS-014).
