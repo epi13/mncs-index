@@ -1,0 +1,216 @@
+{
+ "schema_version": "0.1",
+ "name": "probe-sha256-abc",
+ "cases": [
+  {
+   "id": "digest-abc",
+   "request": {
+    "schema_version": "0.1",
+    "target": {
+     "module": "pressure.probe_sha256_abc",
+     "function": "digest_message"
+    },
+    "arguments": [
+     {
+      "sequence": {
+       "values": [
+        {
+         "byte": {
+          "value": 97
+         }
+        },
+        {
+         "byte": {
+          "value": 98
+         }
+        },
+        {
+         "byte": {
+          "value": 99
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "step_budget": 8192
+   },
+   "expected": [
+    {
+     "sequence": {
+      "values": [
+       {
+        "byte": {
+         "value": 186
+        }
+       },
+       {
+        "byte": {
+         "value": 120
+        }
+       },
+       {
+        "byte": {
+         "value": 22
+        }
+       },
+       {
+        "byte": {
+         "value": 191
+        }
+       },
+       {
+        "byte": {
+         "value": 143
+        }
+       },
+       {
+        "byte": {
+         "value": 1
+        }
+       },
+       {
+        "byte": {
+         "value": 207
+        }
+       },
+       {
+        "byte": {
+         "value": 234
+        }
+       },
+       {
+        "byte": {
+         "value": 65
+        }
+       },
+       {
+        "byte": {
+         "value": 65
+        }
+       },
+       {
+        "byte": {
+         "value": 64
+        }
+       },
+       {
+        "byte": {
+         "value": 222
+        }
+       },
+       {
+        "byte": {
+         "value": 93
+        }
+       },
+       {
+        "byte": {
+         "value": 174
+        }
+       },
+       {
+        "byte": {
+         "value": 34
+        }
+       },
+       {
+        "byte": {
+         "value": 35
+        }
+       },
+       {
+        "byte": {
+         "value": 176
+        }
+       },
+       {
+        "byte": {
+         "value": 3
+        }
+       },
+       {
+        "byte": {
+         "value": 97
+        }
+       },
+       {
+        "byte": {
+         "value": 163
+        }
+       },
+       {
+        "byte": {
+         "value": 150
+        }
+       },
+       {
+        "byte": {
+         "value": 23
+        }
+       },
+       {
+        "byte": {
+         "value": 122
+        }
+       },
+       {
+        "byte": {
+         "value": 156
+        }
+       },
+       {
+        "byte": {
+         "value": 180
+        }
+       },
+       {
+        "byte": {
+         "value": 16
+        }
+       },
+       {
+        "byte": {
+         "value": 255
+        }
+       },
+       {
+        "byte": {
+         "value": 97
+        }
+       },
+       {
+        "byte": {
+         "value": 242
+        }
+       },
+       {
+        "byte": {
+         "value": 0
+        }
+       },
+       {
+        "byte": {
+         "value": 21
+        }
+       },
+       {
+        "byte": {
+         "value": 173
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "expected_effects": [
+    {
+     "kind": "sha256_digest",
+     "target": "sha256_digest",
+     "capability": "verifier"
+    }
+   ],
+   "prohibit_unexpected_effects": true
+  }
+ ]
+}

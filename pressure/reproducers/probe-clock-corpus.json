@@ -1,0 +1,33 @@
+{
+ "schema_version": "0.1",
+ "name": "probe-clock",
+ "cases": [
+  {
+   "id": "past-expired",
+   "request": {
+    "schema_version": "0.1",
+    "target": {
+     "module": "pressure.probe_clock",
+     "function": "past_expired"
+    },
+    "arguments": [],
+    "step_budget": 8192
+   },
+   "expected": [
+    {
+     "boolean": {
+      "value": true
+     }
+    }
+   ],
+   "expected_effects": [
+    {
+     "kind": "clock_read",
+     "target": "clock_read",
+     "capability": "ticker"
+    }
+   ],
+   "prohibit_unexpected_effects": true
+  }
+ ]
+}

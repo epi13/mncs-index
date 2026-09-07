@@ -1,0 +1,37 @@
+{
+ "schema_version": "0.1",
+ "name": "probe-host-read",
+ "cases": [
+  {
+   "id": "blob-len",
+   "request": {
+    "schema_version": "0.1",
+    "target": {
+     "module": "pressure.probe_host_read",
+     "function": "blob_len"
+    },
+    "arguments": [],
+    "step_budget": 8192
+   },
+   "expected": [
+    {
+     "integer": {
+      "value": 17,
+      "type": {
+       "bits": 64,
+       "signed": false
+      }
+     }
+    }
+   ],
+   "expected_effects": [
+    {
+     "kind": "host_read",
+     "target": "blob_read",
+     "capability": "probe_reader"
+    }
+   ],
+   "prohibit_unexpected_effects": true
+  }
+ ]
+}

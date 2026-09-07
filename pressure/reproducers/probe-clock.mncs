@@ -1,0 +1,19 @@
+mncs 0.10;
+
+// PRESS-007 probe: smallest legal granted clock-read program. Time enters
+// only through `clock_read()`, realized from the executor's own clock
+// under an explicit `--grant-time` for the named capability. Corpora must
+// pin only relational booleans (deadline 0 is always expired), never
+// absolute instants. Without a grant the call fails closed.
+// Run: see reproducers/run-language-probes.sh (probe `clock`).
+module pressure.probe_clock;
+
+use mncs.std.clock.v1 as clock;
+
+fn past_expired() -> (result: bool)
+    capability ticker
+    effect clock_read authorized_by ticker
+{
+    let now: u64 = clock_read();
+    return clock.expired(0, now);
+}
