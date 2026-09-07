@@ -27,17 +27,17 @@ jobs:
         run: |
           set -euo pipefail
           for kernel in src/digest.mncs src/scan.mncs src/kind.mncs src/order.mncs; do
-            ../mncs-language/target/debug/mncs source-study "$kernel" --node-id "ci-${kernel//\//-}" \
+            mncs-language/target/debug/mncs source-study "$kernel" --node-id "ci-${kernel//\//-}" \
               | python3 -c "import json,sys; d=json.load(sys.stdin); errs=[x for x in d['diagnostics'] if x.get('severity')=='error' or str(x.get('code',''))[:3] in ('MNE','MNB','MNP')]; assert not errs, errs; print('$kernel: clean')"
           done
       - name: Check pressure reproducers fail as documented
         run: |
           set -euo pipefail
-          ../mncs-language/target/debug/mncs source-study pressure/reproducers/traversal-u64-domain.mncs --node-id ci \
+          mncs-language/target/debug/mncs source-study pressure/reproducers/traversal-u64-domain.mncs --node-id ci \
             | grep -q MNB101
-          ../mncs-language/target/debug/mncs source-study pressure/reproducers/int-bitwise-xor.mncs --node-id ci \
+          mncs-language/target/debug/mncs source-study pressure/reproducers/int-bitwise-xor.mncs --node-id ci \
             | grep -q MNE103
-          ../mncs-language/target/debug/mncs source-study pressure/reproducers/nested-iterate.mncs --node-id ci \
+          mncs-language/target/debug/mncs source-study pressure/reproducers/nested-iterate.mncs --node-id ci \
             | grep -q MNE147
 
   pytest:
