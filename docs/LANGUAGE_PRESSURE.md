@@ -2,6 +2,12 @@
 
 `mncs-index` exists partly to answer a hard question: can MNCS express and efficiently execute a serious, highly concurrent systems workload without escaping into another language?
 
+> First-pass answer (2026-09): MNCS expresses the pure deterministic core
+> well (four Profile-0.8 kernels, all semantic decisions in-language), but
+> cannot express threads, channels, filesystem effects, watching, clocks,
+> crypto digests, unbounded text, or economical invocation. The grounded
+> ledger is `pressure/registry.md` (12 entries, 3 minimal reproducers).
+
 ## Pressure domains
 
 The project is expected to pressure at least:

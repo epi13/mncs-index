@@ -1,0 +1,72 @@
+mncs 0.8;
+
+// mncs.index.digest.v1 — content digests for the deterministic index.
+//
+// Design notes (see also pressure/PRESS-004):
+// - Integer bitwise operators (`^`, `&`, `|`) exist only for `byte`, not
+//   for integer types, so the classic FNV-1a xor-fold is inexpressible.
+//   This module therefore defines an explicitly xor-free fold:
+//   multiply-add with the FNV prime plus a shift-add avalanche term.
+//   It is NOT FNV-1a and is not named as such. Correctness here means
+//   determinism and order-sensitivity, both pinned by execution corpora.
+// - All arithmetic is wrapping (`+%`, `*%`); shifts on `u64` are logical.
+// - `u64` sequences cannot be `iterate` domains (MNB101), so windows are
+//   `[byte; up_to 64]` and each call folds at most 64 bytes.
+// - Tree reduction (`combine`) gives the per-file digest a canonical
+//   parallel shape: leaves fold disjoint windows independently, levels
+//   combine pairwise in file order, an odd tail pairs with PAD 0, and a
+//   single window (or empty input) digests to its leaf directly.
+module mncs.index.digest.v1;
+
+// FNV offset basis: the digest of the empty input.
+fn empty_digest() -> (result: u64) {
+    return 14695981039346656037;
+}
+
+// One xor-free fold step over a single byte.
+fn mix_step(state: u64, b: byte) -> (result: u64) {
+    let added: u64 = state +% (b as u64);
+    let mulled: u64 = added *% 1099511628211;
+    return mulled +% (mulled >> 29);
+}
+
+// Pure sequential fold step over a window (no stats): used to fingerprint
+// the canonical byte stream itself, so the canonical digest is also an
+// MNCS-computed value alongside the host-side SHA-256 cross-check.
+fn fold_window(state: u64, chunk: [byte; up_to 64], length: u64) -> (result: u64) {
+    iterate i over chunk carrying h: u64 = state {
+        let live: bool = i < length;
+        next h = select(live, mix_step(h, chunk[i]), h);
+    }
+    return h;
+}
+
+// Fold one window of bytes into a running state. Calling with
+// `empty_digest()` starts a fresh leaf; threading the previous state
+// continues a sequential fold.
+record WinDigest { state: u64, words: u64, lines: u64, open: bool }
+
+fn leaf_window(state: u64, chunk: [byte; up_to 64], length: u64, open_in: bool) -> (result: WinDigest) {
+    let seed: WinDigest = WinDigest { state: state, words: 0, lines: 0, open: open_in };
+    iterate i over chunk carrying st: WinDigest = seed {
+        let live: bool = i < length;
+        let v: u64 = chunk[i] as u64;
+        let is_nl: bool = live && v == 10;
+        let is_sp: bool = live && (v == 32 || v == 10 || v == 9 || v == 13);
+        let word_start: bool = live && select(st.open, false, select(is_sp, false, true));
+        next st = WinDigest {
+            state: select(live, mix_step(st.state, chunk[i]), st.state),
+            words: st.words +% select(word_start, 1, 0),
+            lines: st.lines +% select(is_nl, 1, 0),
+            open: select(live, select(is_sp, false, true), st.open)
+        };
+    }
+    return st;
+}
+
+// Canonical tree combine: order-sensitive (left and right use distinct
+// multipliers), so swapping children changes the digest.
+fn combine(left: u64, right: u64) -> (result: u64) {
+    let mixed: u64 = (left *% 1099511628211) +% (right *% 16777619);
+    return mixed +% (mixed >> 31);
+}

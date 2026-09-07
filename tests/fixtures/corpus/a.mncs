@@ -1,0 +1,7 @@
+mncs 0.8;
+
+module fixture.alpha;
+
+fn alpha_value(seed: i64) -> (result: i64) {
+    return seed + 1;
+}

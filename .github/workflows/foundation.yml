@@ -37,4 +37,6 @@ jobs:
           done
           grep -q "Founding invariant" README.md
           grep -q "incremental update and clean rebuild" rfcs/0005-incremental-watch-model.md
-          grep -q "No implementation-derived pressure findings" pressure/registry.md
+          grep -q "PRESS-001" pressure/registry.md
+          test -s src/digest.mncs
+          test -s runner/mncs_index/pipeline.py

@@ -1,0 +1,117 @@
+mncs 0.8;
+
+// mncs.index.order.v1 — canonical ordering, query matching, change
+// classification.
+//
+// The canonical record order is (kind_rank, path bytes lexicographic,
+// seq). `record_less` decides it for paths up to 64 bytes; longer paths
+// use the same byte-lexicographic rule applied host-side at corpus scale
+// (see pressure/PRESS-005), differentially tested against `path_less`.
+module mncs.index.order.v1;
+
+// Byte-lexicographic compare over the live prefixes: -1, 0, or 1.
+// The empty-`b` guard mirrors mncs.std.text_scan.v1: strict selection
+// evaluates both candidates, so a clamped `b[0]` on an empty view would
+// trap without it.
+fn compare_window(a: [byte; up_to 64], alen: u64, b: [byte; up_to 64], blen: u64) -> (result: i64) {
+    let la: u64 = select(alen <= a.len, alen, a.len);
+    let lb: u64 = select(blen <= b.len, blen, b.len);
+    let tie: i64 = select(la == lb, 0, select(la < lb, 0 - 1, 1));
+    if b.len == 0 {
+        return tie;
+    }
+    iterate i over a carrying st: i64 = 0 - 2 {
+        let live: bool = i < la && i < lb;
+        let va: u64 = a[i] as u64;
+        let slot: u64 = select(i < lb, i, 0);
+        let vb: u64 = b[slot] as u64;
+        let diff: bool = live && va != vb;
+        let less: bool = va < vb;
+        next st = select(st != 0 - 2, st, select(diff, select(less, 0 - 1, 1), select(i +% 1 == la, select(i +% 1 == lb, 0, select(la < lb, 0 - 1, 1)), 0 - 2)));
+    }
+    return select(st == 0 - 2, tie, st);
+}
+
+// Strict less-than on live path prefixes.
+fn path_less(a: [byte; up_to 64], alen: u64, b: [byte; up_to 64], blen: u64) -> (result: bool) {
+    return compare_window(a, alen, b, blen) == 0 - 1;
+}
+
+// Canonical record order for paths up to 64 bytes: kind rank, then path
+// bytes, then per-path sequence number.
+fn record_less(ka: u64, a: [byte; up_to 64], alen: u64, sa: u64, kb: u64, b: [byte; up_to 64], blen: u64, sb: u64) -> (result: bool) {
+    if ka != kb {
+        return ka < kb;
+    }
+    let cmp: i64 = compare_window(a, alen, b, blen);
+    if cmp != 0 {
+        return cmp == 0 - 1;
+    }
+    return sa < sb;
+}
+
+// Small machine query predicate over one candidate record: exact kind
+// and/or digest equality plus a literal term contained in one 64-byte
+// window of the record's searchable bytes. Any disabled clause passes.
+// Window equality: the live needle prefix matches `hay` at `start`.
+// Guards keep every projection in range: `hay_slot` clamps because
+// selection is strict and would otherwise trap on dead positions.
+fn window_equal8(hay: [byte; up_to 64], haylen: u64, start: u64, needle: [byte; 8], nlen: u64) -> (result: bool) {
+    if hay.len == 0 {
+        return nlen == 0;
+    }
+    let hlen: u64 = select(haylen <= hay.len, haylen, hay.len);
+    let fits: bool = start +% nlen <= hlen;
+    iterate j over needle carrying same: bool = fits {
+        let live: bool = fits && j < nlen;
+        let k: u64 = select(live, start +% j, 0);
+        next same = same && select(live, hay[k] == needle[j], true);
+    }
+    return same;
+}
+
+// Literal-term detection over one window. The outer scan calls the
+// single-loop matcher per position (nested `iterate` is rejected), so
+// total work stays within 64*8 byte comparisons.
+fn contains8(hay: [byte; up_to 64], haylen: u64, needle: [byte; 8], nlen: u64) -> (result: bool) {
+    if nlen == 0 {
+        return true;
+    }
+    if nlen > 8 {
+        return false;
+    }
+    let hlen: u64 = select(haylen <= hay.len, haylen, hay.len);
+    if hlen < nlen {
+        return false;
+    }
+    iterate i over hay carrying found: bool = false {
+        let start: bool = i +% nlen <= hlen;
+        next found = found || select(start, window_equal8(hay, haylen, i, needle, nlen), false);
+    }
+    return found;
+}
+
+fn query_match(kind: u64, qkind: u64, kind_any: bool, digest: u64, qdigest: u64, digest_any: bool, hay: [byte; up_to 64], haylen: u64, needle: [byte; 8], nlen: u64, term_any: bool) -> (result: bool) {
+    let kind_ok: bool = select(kind_any, true, kind == qkind);
+    let digest_ok: bool = select(digest_any, true, digest == qdigest);
+    let term_ok: bool = select(term_any, true, contains8(hay, haylen, needle, nlen));
+    return kind_ok && digest_ok && term_ok;
+}
+
+// Incremental change classification: 0 = unchanged, 1 = added,
+// 2 = removed, 3 = modified.
+fn classify_change(old_present: bool, old_digest: u64, new_present: bool, new_digest: u64) -> (result: u64) {
+    if old_present {
+        if new_present {
+            if old_digest == new_digest {
+                return 0;
+            }
+            return 3;
+        }
+        return 2;
+    }
+    if new_present {
+        return 1;
+    }
+    return 0;
+}

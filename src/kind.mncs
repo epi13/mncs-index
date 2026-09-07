@@ -1,0 +1,102 @@
+mncs 0.8;
+
+// mncs.index.kind.v1 — file-kind classification from extension bytes.
+//
+// Kind ranks are canonical and stable; the merge layer sorts by rank.
+// 0 = unknown, 1 = mncs, 2 = md, 3 = json, 4 = toml, 5 = yaml/yml,
+// 6 = txt/text, 7 = log. Ranks are arbitrary but frozen: changing them
+// changes every canonical hash, so additions append new ranks only.
+module mncs.index.kind.v1;
+
+fn classify_kind(ext: [byte; up_to 8], length: u64) -> (result: u64) {
+    if length == 4 {
+        if (ext[0] as u64) == 109 {
+            if (ext[1] as u64) == 110 {
+                if (ext[2] as u64) == 99 {
+                    if (ext[3] as u64) == 115 {
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+    if length == 2 {
+        if (ext[0] as u64) == 109 {
+            if (ext[1] as u64) == 100 {
+                return 2;
+            }
+        }
+    }
+    if length == 4 {
+        if (ext[0] as u64) == 106 {
+            if (ext[1] as u64) == 115 {
+                if (ext[2] as u64) == 111 {
+                    if (ext[3] as u64) == 110 {
+                        return 3;
+                    }
+                }
+            }
+        }
+    }
+    if length == 4 {
+        if (ext[0] as u64) == 116 {
+            if (ext[1] as u64) == 111 {
+                if (ext[2] as u64) == 109 {
+                    if (ext[3] as u64) == 108 {
+                        return 4;
+                    }
+                }
+            }
+        }
+    }
+    if length == 4 {
+        if (ext[0] as u64) == 121 {
+            if (ext[1] as u64) == 97 {
+                if (ext[2] as u64) == 109 {
+                    if (ext[3] as u64) == 108 {
+                        return 5;
+                    }
+                }
+            }
+        }
+    }
+    if length == 3 {
+        if (ext[0] as u64) == 121 {
+            if (ext[1] as u64) == 109 {
+                if (ext[2] as u64) == 108 {
+                    return 5;
+                }
+            }
+        }
+    }
+    if length == 3 {
+        if (ext[0] as u64) == 116 {
+            if (ext[1] as u64) == 120 {
+                if (ext[2] as u64) == 116 {
+                    return 6;
+                }
+            }
+        }
+    }
+    if length == 4 {
+        if (ext[0] as u64) == 116 {
+            if (ext[1] as u64) == 101 {
+                if (ext[2] as u64) == 120 {
+                    if (ext[3] as u64) == 116 {
+                        return 6;
+                    }
+                }
+            }
+        }
+    }
+    if length == 3 {
+        if (ext[0] as u64) == 108 {
+            if (ext[1] as u64) == 111 {
+                if (ext[2] as u64) == 103 {
+                    return 7;
+                }
+            }
+        }
+    }
+    return 0;
+}

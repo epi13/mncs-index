@@ -95,3 +95,29 @@ Writers build a candidate snapshot privately. Once canonicalization succeeds, pu
 ## Future storage
 
 The initial implementation should prioritize semantic correctness over storage sophistication. Persistence, MVCC-like techniques, memory mapping, compaction, and lock-free structures are valid later pressure points, but should not obscure the first deterministic concurrency proof.
+
+## Implementation notes (first working pass)
+
+- Meaning lives in `src/*.mncs` (Profile 0.8, dependency-free): content
+  folds and Merkle combines (`digest.mncs`), byte classes and token
+  validation (`scan.mncs`), kind ranks (`kind.mncs`), ordering/matching/
+  change verdicts (`order.mncs`).
+- The host runner (`runner/mncs_index/`) is two thread pools (read +
+  kernel) joined by a bounded `queue.Queue`, per-file ordered assembly, a
+  canonical sort, and atomic publication. See `runner/README.md` for the
+  per-module pressure map.
+- Work item = one file; kernel item = one MNCS `execute` call (one 64 B
+  window, one 8-token validation batch, one predicate). Intra-file calls
+  are ordered by construction; inter-file execution is fully parallel.
+- The carried word-boundary flag is threaded in canonical window order at
+  assembly; the one implied overcount is repaired by rule (non-space
+  continuation), differentially tested against the kernel.
+- Canonical bytes hash content only (format, discovery id, records);
+  generation is store metadata. Term identity is (path, token) with an
+  MNCS content tag; file binding travels through the sort key and parent
+  digest.
+- Known simplifications: no inter-file reference edges yet (so no
+  dependency invalidation graph), renames surface as remove+add,
+  substring queries beyond 8 B use the differentially-tested host path,
+  and large-file economics are bounded by one-subprocess-per-call
+  (PRESS-010).

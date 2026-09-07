@@ -1,0 +1,69 @@
+name: index-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  kernel-study:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out mncs-language (pinned executor)
+        uses: actions/checkout@v4
+        with:
+          repository: epi13/mncs-language
+          path: mncs-language
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build mncs executor
+        working-directory: mncs-language
+        run: cargo build -p mncs-cli
+      - name: Validate MNCS kernels elaborate cleanly
+        run: |
+          set -euo pipefail
+          for kernel in src/digest.mncs src/scan.mncs src/kind.mncs src/order.mncs; do
+            mncs-language/target/debug/mncs source-study "$kernel" --node-id "ci-${kernel//\//-}" \
+              | python3 -c "import json,sys; d=json.load(sys.stdin); errs=[x for x in d['diagnostics'] if x.get('severity')=='error' or str(x.get('code',''))[:3] in ('MNE','MNB','MNP')]; assert not errs, errs; print('$kernel: clean')"
+          done
+      - name: Check pressure reproducers fail as documented
+        # Reproducers must fail elaboration (non-zero exit); swallow that
+        # so grep alone decides whether the documented diagnostic appears.
+        run: |
+          set -euo pipefail
+          { mncs-language/target/debug/mncs source-study pressure/reproducers/traversal-u64-domain.mncs --node-id ci || true; } \
+            | grep -q MNB101
+          { mncs-language/target/debug/mncs source-study pressure/reproducers/int-bitwise-xor.mncs --node-id ci || true; } \
+            | grep -q MNE103
+          { mncs-language/target/debug/mncs source-study pressure/reproducers/nested-iterate.mncs --node-id ci || true; } \
+            | grep -q MNE147
+
+  pytest:
+    runs-on: ubuntu-latest
+    needs: kernel-study
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out mncs-language (pinned executor)
+        uses: actions/checkout@v4
+        with:
+          repository: epi13/mncs-language
+          path: mncs-language
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build mncs executor
+        working-directory: mncs-language
+        run: cargo build -p mncs-cli
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependencies
+        run: python3 -m pip install pytest
+      - name: Run conformance suite
+        run: |
+          set -euo pipefail
+          export MNCS_BIN="$PWD/mncs-language/target/debug/mncs"
+          python3 -m pytest tests/ -q

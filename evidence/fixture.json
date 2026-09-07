@@ -1,0 +1,35 @@
+{
+ "corpus": "tests/fixtures/corpus",
+ "runs": [
+  {
+   "workers": 1,
+   "files": 8,
+   "docs": 8,
+   "terms": 51,
+   "bytes_indexed": 413,
+   "index_hash": "e817da751ff6688afd71676445a9c84ac6fa96632e9c07db08167579493d809a",
+   "wall_s": 47.33
+  },
+  {
+   "workers": 4,
+   "files": 8,
+   "docs": 8,
+   "terms": 51,
+   "bytes_indexed": 413,
+   "index_hash": "e817da751ff6688afd71676445a9c84ac6fa96632e9c07db08167579493d809a",
+   "wall_s": 3.37
+  },
+  {
+   "workers": 8,
+   "files": 8,
+   "docs": 8,
+   "terms": 51,
+   "bytes_indexed": 413,
+   "index_hash": "e817da751ff6688afd71676445a9c84ac6fa96632e9c07db08167579493d809a",
+   "wall_s": 3.24
+  }
+ ],
+ "converged": true,
+ "mncs_calls": 190,
+ "max_in_flight": 8
+}

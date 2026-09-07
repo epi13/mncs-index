@@ -2,19 +2,30 @@
 
 A machine-native, highly concurrent indexing and query engine for the MNCS ecosystem, providing deterministic incremental indexing across source code, RFCs, artifacts, tests, diagnostics, and project metadata.
 
-## Why this exists
+## Status (first working implementation)
 
-MNCS is becoming a family of repositories, runtimes, backends, artifacts, RFCs, tests, pressure reports, and machine-generated evidence. Finding the right fact should not depend on a human remembering which repository or document contains it.
+This repository now contains a **working deterministic corpus indexer**:
 
-`mncs-index` is intended to become the shared indexing substrate for that ecosystem.
+- Real MNCS kernels in `src/*.mncs` (content digests, byte classification,
+  symbol validation, kind classification, canonical ordering, query
+  matching, change classification) — every semantic decision is MNCS.
+- A thin host runner in `runner/mncs_index/` (discovery, thread pools,
+  bounded queues, canonical merge, SHA-256, store, query CLI, polling
+  watch) — effects MNCS cannot yet express, each mapped to a pressure entry.
+- 60+ pytest tests proving worker-count equivalence, repeatability,
+  schedule perturbation convergence, incremental == rebuild, query
+  determinism, failure publication, stress, and watch following.
+- A grounded pressure registry (`pressure/registry.md`, 12 entries with
+  reproducers) against current `mncs-language`.
 
-It is also deliberately a **language pressure project**. Indexing has abundant natural parallelism, but useful indexing requires much more than spawning threads: bounded queues, cancellation, fan-out/fan-in, deterministic reduction, concurrent state, snapshots, incremental invalidation, graceful shutdown, and repeatable results under different schedules.
+What does not exist yet: MNCS-native threads/channels/filesystem (P0
+pressure), in-process kernel invocation (P2), crypto digests in MNCS (P1),
+event-driven watching (P1). See [Pressure](#pressure) and
+`pressure/registry.md`.
 
 ## Founding invariant
 
 > For a fixed input snapshot and configuration, changing concurrency may change throughput and execution order, but must not change the canonical index or query meaning.
-
-A central conformance target is therefore:
 
 ```text
 index(snapshot, workers = 1)  -> H
@@ -23,35 +34,96 @@ index(snapshot, workers = 8)  -> H
 index(snapshot, workers = 32) -> H
 ```
 
-where `H` is the same canonical index hash.
+Proven by `tests/test_determinism.py` and `tests/test_stress.py`.
 
-## Intended inputs
+## Quick start
 
-- MNCS source and compiler-visible metadata
-- RFCs and architectural documentation
-- tests and test evidence
-- diagnostics and compiler output
-- git/project metadata
-- CI and harness artifacts
-- language-pressure findings
-- future normalized semantic records from `mncs-ingest`
-- future graph/memory relationships from `mncs-memory`
+Prerequisites: Python 3.10+, pytest, and a built `mncs-language` executor
+(`cargo build -p mncs-cli` in a sibling checkout, or set `MNCS_BIN`).
 
-## Intended consumers
+```bash
+# Build an index over a corpus directory
+PYTHONPATH=runner python3 -m mncs_index.cli build \
+  --corpus tests/fixtures/corpus --store /tmp/demo-store --workers 8
 
-- Atlas and agents
-- mncs-harness
-- mncs-fabric
-- mncs-language tooling
-- mncs-memory / mncs-ingest
-- project-local developer tooling
-- future MNCS-native query and analysis tools
+# Query it
+PYTHONPATH=runner python3 -m mncs_index.cli query --store /tmp/demo-store --term index
+PYTHONPATH=runner python3 -m mncs_index.cli query --store /tmp/demo-store --kind 1
+PYTHONPATH=runner python3 -m mncs_index.cli query --store /tmp/demo-store --path a.mncs
 
-## Repository state
+# Incremental follow-up after changing files
+PYTHONPATH=runner python3 -m mncs_index.cli build \
+  --corpus tests/fixtures/corpus --store /tmp/demo-store --workers 8 --incremental
 
-This first project merge defines the charter, RFCs, architecture, integration boundaries, testing strategy, and pressure methodology. It does **not** claim a production indexer exists yet.
+# Polling watch (baseline must exist first)
+PYTHONPATH=runner python3 -m mncs_index.cli watch \
+  --corpus tests/fixtures/corpus --store /tmp/demo-store --generations 2
+```
 
-Implementation work should remain overwhelmingly MNCS-language. Another implementation language must not become the quiet escape hatch when MNCS encounters pressure; pressure should be recorded and fed back to `mncs-language`.
+## Testing
+
+```bash
+python3 -m pytest tests/ -q            # full default suite (bounded for CI)
+python3 -m pytest tests/ -q --run-slow # + megabyte-scale determinism
+```
+
+Suite map:
+
+| File | Proves |
+|------|--------|
+| `test_kernels.py` | Every MNCS kernel function pinned by execution |
+| `test_differential.py` | Kernels agree with independent oracles on seeded random inputs |
+| `test_determinism.py` | Worker counts / seeds / delays / queues converge; real overlap happened |
+| `test_incremental.py` | `incremental(A→B) == rebuild(B)` for add/remove/change/rename/multi |
+| `test_query.py` | Query classes, canonical order, limits, repeatability |
+| `test_failure.py` | Failed builds never publish; typed errors; cancellation |
+| `test_stress.py` | 140+ files, duplicates, deep paths, skewed sizes, workers to 32 |
+| `test_watch.py` | Polling watcher follows mutations to equivalent generations |
+
+## How the pieces fit
+
+```text
+corpus files
+    |
+    v  host: discover.py (walk/read/normalize; PRESS-003)
+bounded work queue (PRESS-002)
+    |
+    +--> kernel workers: ONE `mncs execute` per item (PRESS-001/010)
+    |       digest.mncs  leaf/combine/fold  (content identity)
+    |       scan.mncs    classify/validate/token digests
+    |       kind.mncs    extension -> kind rank
+    |       order.mncs   compare/match/change verdicts
+    v
+deterministic assembly (ordered Merkle tree, carry fix-up)
+    |
+    v
+canonical merge (sort by the MNCS-specified rule; PRESS-005)
+    |
+    +--> canonical bytes -> SHA-256 (PRESS-006) + MNCS fold
+    +--> atomic publish (tmp + rename)
+    +--> query readers / incremental base / watcher
+```
+
+## MNCS implementation ratio
+
+| Layer | Language | Evidence |
+|-------|----------|----------|
+| Content digest fold + tree combine | MNCS (`src/digest.mncs`) | kernel + differential tests |
+| Byte classes, token validity/digests | MNCS (`src/scan.mncs`) | kernel + differential tests |
+| Kind classification | MNCS (`src/kind.mncs`) | kernel tests |
+| Ordering, matching, change verdicts | MNCS (`src/order.mncs`) | kernel + differential tests |
+| Discovery, threads, queues, merge scale-out, SHA-256, store, CLI | Python (temporary) | labeled per-module; PRESS-001/002/003/006 |
+
+Host scale-out code that mirrors an MNCS rule (lexicographic sort,
+substring search beyond 8 B, token splitting) is differentially tested
+against the kernel, never trusted silently.
+
+## Pressure
+
+Twelve grounded entries: `pressure/registry.md`, plus minimal MNCS
+reproducers under `pressure/reproducers/`. Highest-priority next language
+work: in-process/batch kernel invocation (PRESS-010), integer bitwise ops
+(PRESS-004), `u64` traversal domains (PRESS-005), crypto digests (PRESS-006).
 
 ## Layout
 
@@ -59,10 +131,12 @@ Implementation work should remain overwhelmingly MNCS-language. Another implemen
 .
 ├── rfcs/                 Project design decisions
 ├── docs/                 Architecture, integrations, testing and pressure guidance
-├── src/                  MNCS-native implementation area
-├── tests/                Conformance and pressure tests
-├── pressure/             Language-pressure registry and evidence
-├── .github/              Lightweight repository validation
+├── src/                  MNCS kernels (*.mncs) + execution corpora notes
+├── runner/mncs_index/    Thin host infrastructure (temporary, labeled)
+├── tests/                Pytest suites + fixtures + test-only oracles
+├── pressure/             Registry + minimal reproducers
+├── evidence/             Recorded runs (hashes, timings, worker matrices)
+├── .github/              Foundation contract + index CI
 ├── AGENTS.md
 ├── CONTRIBUTING.md
 ├── ROADMAP.md
@@ -77,20 +151,6 @@ Implementation work should remain overwhelmingly MNCS-language. Another implemen
 4. [RFC 0004 — Query Model](rfcs/0004-query-model.md)
 5. [RFC 0005 — Incremental and Watch Model](rfcs/0005-incremental-watch-model.md)
 6. [RFC 0006 — Language Pressure Methodology](rfcs/0006-language-pressure-methodology.md)
-
-## Near-term proof
-
-The first meaningful implementation milestone is intentionally narrow:
-
-1. index a deterministic fixture tree,
-2. process files concurrently,
-3. emit canonical records in a schedule-independent order,
-4. hash the canonical output,
-5. repeat the same corpus under multiple worker counts and randomized scheduling,
-6. prove identical hashes and query results,
-7. record every MNCS-language gap encountered while doing so.
-
-That proof is more valuable than a broad indexer that silently avoids the hard concurrency problems.
 
 ## License
 

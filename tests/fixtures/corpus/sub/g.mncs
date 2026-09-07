@@ -1,0 +1,5 @@
+module fixture.deep;
+
+fn deep_helper() -> (result: bool) {
+    return true;
+}
