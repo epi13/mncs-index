@@ -123,3 +123,45 @@ def classify_change(
             return 0 if old_digest == new_digest else 3
         return 2
     return 1 if new_present else 0
+
+
+def classify_decl(line: bytes) -> int:
+    for code, kw in ((1, b"module"), (3, b"record"), (4, b"use"), (2, b"fn")):
+        if len(line) >= len(kw) + 1 and line.startswith(kw):
+            if line[len(kw)] in (32, 9):
+                return code
+    return 0
+
+
+def heading_level(line: bytes) -> int:
+    k = 0
+    while k < len(line) and line[k] == 35:
+        k += 1
+    if k == 0 or k > 6:
+        return 0
+    if k >= len(line) or line[k] != 32:
+        return 0
+    return k
+
+
+def contains_link(line: bytes) -> bool:
+    return b"](" in line
+
+
+def is_press_id(tok: bytes) -> bool:
+    return (
+        len(tok) == 9
+        and tok[:6] == b"PRESS-"
+        and all(48 <= b <= 57 for b in tok[6:])
+    )
+
+
+def classify_rfc_token(tok: bytes) -> int:
+    if len(tok) == 3 and tok.lower() == b"rfc":
+        return 1
+    if len(tok) == 4:
+        if tok.lower() == b"rfcs":
+            return 3
+        if all(48 <= b <= 57 for b in tok):
+            return 2
+    return 0

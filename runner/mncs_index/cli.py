@@ -7,8 +7,14 @@ import json
 import sys
 
 from .bridge import Bridge
-from .indexer import build_snapshot, incremental_snapshot
+from .indexer import (
+    build_snapshot,
+    build_snapshot_v2,
+    incremental_snapshot,
+    incremental_snapshot_v2,
+)
 from .kernels import KIND_NAMES, Kernels
+from .lineage import resolve as resolve_lineage
 from .model import hex16
 from .pipeline import BuildConfig
 from .query import QueryEngine
@@ -34,22 +40,44 @@ def cmd_build(args) -> int:
     kernels = _kernels(args)
     store = Store(args.store)
     head = store.head()
+    rich = bool(getattr(args, "rich", False))
     if args.incremental and head is not None:
         prev, established, prev_crc = store.load_head()
         gen = head + 1
-        snap, canon, corpus, verdicts = incremental_snapshot(
-            args.corpus, gen, prev, prev_crc, kernels, _config(args)
-        )
+        if rich:
+            snap, canon, corpus, verdicts = incremental_snapshot_v2(
+                args.corpus, gen, prev, prev_crc, kernels, _config(args)
+            )
+        else:
+            snap, canon, corpus, verdicts = incremental_snapshot(
+                args.corpus, gen, prev, prev_crc, kernels, _config(args)
+            )
         estat = dict(established)
         for d in snap.docs:
             estat.setdefault(d.path, gen)
-        store.publish(snap, canon, estat, {it.path: it.crc for it in corpus.items})
+        store.publish(
+            snap, canon, estat, {it.path: it.crc for it in corpus.items}, head
+        )
+        removed = [
+            (d.path, d.digest) for d in prev.docs if verdicts.get(d.path) == 2
+        ]
+        added = [(d.path, d.digest) for d in snap.docs if verdicts.get(d.path) == 1]
+        lineage = [
+            {
+                "old": item.old,
+                "new": item.new,
+                "kind": item.kind,
+                "digest": hex16(item.digest),
+            }
+            for item in resolve_lineage(removed, added)
+        ]
         print(
             json.dumps(
                 {
                     "generation": gen,
                     "mode": "incremental",
                     "verdicts": verdicts,
+                    "lineage": lineage,
                     "index_hash": snap.index_hash,
                     "mncs_fingerprint": snap.mncs_fingerprint,
                 }
@@ -57,14 +85,20 @@ def cmd_build(args) -> int:
         )
     else:
         gen = 0 if head is None else head + 1
-        snap, canon, corpus, _bridge = build_snapshot(
-            args.corpus, gen, kernels, _config(args)
-        )
+        if rich:
+            snap, canon, corpus, _bridge = build_snapshot_v2(
+                args.corpus, gen, kernels, _config(args)
+            )
+        else:
+            snap, canon, corpus, _bridge = build_snapshot(
+                args.corpus, gen, kernels, _config(args)
+            )
         store.publish(
             snap,
             canon,
             {d.path: gen for d in snap.docs},
             {it.path: it.crc for it in corpus.items},
+            head,
         )
         print(
             json.dumps(
@@ -86,6 +120,46 @@ def cmd_build(args) -> int:
     return 0
 
 
+def _rich_record_json(rec) -> dict:
+    cls = type(rec).__name__
+    if cls == "SymRecord":
+        return {
+            "record": "sym",
+            "path": rec.path,
+            "sym": rec.sym,
+            "name": rec.name,
+            "ndigest": hex16(rec.ndigest),
+            "seq": rec.seq,
+        }
+    if cls == "HeadingRecord":
+        return {
+            "record": "heading",
+            "path": rec.path,
+            "level": rec.level,
+            "seq": rec.seq,
+            "tdigest": hex16(rec.tdigest),
+            "title": rec.title,
+        }
+    if cls == "RelRecord":
+        return {
+            "record": "rel",
+            "src": rec.src,
+            "rel": rec.rel,
+            "dst": rec.dst,
+            "seq": rec.seq,
+        }
+    if cls == "PressRecord":
+        return {"record": "press", "path": rec.path, "pid": rec.pid, "seq": rec.seq}
+    return {
+        "kind": KIND_NAMES.get(rec.kind, rec.kind),
+        "path": rec.path,
+        "digest": hex16(rec.digest),
+        "size": rec.size,
+        "words": rec.words,
+        "lines": rec.lines,
+    }
+
+
 def cmd_query(args) -> int:
     kernels = _kernels(args)
     store = Store(args.store)
@@ -93,9 +167,28 @@ def cmd_query(args) -> int:
     if loaded[0] is None:
         print("empty store", file=sys.stderr)
         return 1
-    snap, _, _ = loaded
-    engine = QueryEngine(snap, kernels, workers=args.workers)
-    if args.digest:
+    snap, established, _ = loaded
+    engine = QueryEngine(snap, kernels, workers=args.workers, established=established)
+    if getattr(args, "defines", None):
+        res = engine.defines(args.defines, args.limit)
+    elif getattr(args, "references", None):
+        res = engine.references(args.references, args.limit)
+    elif getattr(args, "depends_on", None):
+        res = engine.depends_on(args.depends_on, args.limit)
+    elif getattr(args, "dependents", None):
+        res = engine.dependents(args.dependents, args.limit)
+    elif getattr(args, "rfc", None):
+        res = engine.rfc_refs(args.rfc, args.limit)
+    elif getattr(args, "pressure", None):
+        res = engine.pressure(args.pressure, args.limit)
+    elif getattr(args, "symbol", None):
+        res = engine.symbols(args.symbol, args.limit)
+    elif getattr(args, "headings", None):
+        res = engine.headings_for(args.headings, args.limit)
+    elif getattr(args, "provenance", None):
+        print(json.dumps(engine.provenance(args.provenance), indent=1))
+        return 0
+    elif args.digest:
         res = engine.by_digest_query(int(args.digest, 16), args.limit)
     elif args.path:
         res = engine.by_path(args.path, args.limit)
@@ -110,17 +203,7 @@ def cmd_query(args) -> int:
         "generation": res.generation,
         "total": res.total,
         "limited": res.limited,
-        "records": [
-            {
-                "kind": KIND_NAMES.get(d.kind, d.kind),
-                "path": d.path,
-                "digest": hex16(d.digest),
-                "size": d.size,
-                "words": d.words,
-                "lines": d.lines,
-            }
-            for d in res.records
-        ],
+        "records": [_rich_record_json(d) for d in res.records],
     }
     print(json.dumps(out, indent=1))
     return 0
@@ -136,6 +219,8 @@ def cmd_watch(args) -> int:
         _config(args),
         interval_s=args.interval,
         quiet_polls=args.quiet_polls,
+        rich=bool(getattr(args, "rich", False)),
+        validate_every=getattr(args, "validate_every", 4),
     )
     try:
         published = watcher.run(max_generations=args.generations)
@@ -159,6 +244,11 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--seed", type=int, default=None)
     b.add_argument("--delay-ms", type=float, default=0.0)
     b.add_argument("--incremental", action="store_true")
+    b.add_argument(
+        "--rich",
+        action="store_true",
+        help="build canonical-v2 (source/heading/reference/pressure records)",
+    )
     b.set_defaults(func=cmd_build)
 
     q = sub.add_parser("query")
@@ -168,6 +258,15 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--path", default=None)
     q.add_argument("--kind", default=None)
     q.add_argument("--term", default=None)
+    q.add_argument("--defines", default=None, help="who defines symbol NAME (v2)")
+    q.add_argument("--references", default=None, help="references to DST (v2)")
+    q.add_argument("--depends-on", default=None, help="depends-on edges of PATH (v2)")
+    q.add_argument("--dependents", default=None, help="who depends on DST (v2)")
+    q.add_argument("--rfc", default=None, help="rfc-ref edges for NUMBER (v2)")
+    q.add_argument("--pressure", default=None, help="mentions of PRESS-ID (v2)")
+    q.add_argument("--symbol", default=None, help="declarations of NAME (v2)")
+    q.add_argument("--headings", default=None, help="headings of PATH (v2)")
+    q.add_argument("--provenance", default=None, help="provenance of PATH")
     q.add_argument("--limit", type=int, default=None)
     q.set_defaults(func=cmd_query)
 
@@ -181,6 +280,17 @@ def build_parser() -> argparse.ArgumentParser:
     w.add_argument("--interval", type=float, default=0.5)
     w.add_argument("--quiet-polls", type=int, default=2)
     w.add_argument("--generations", type=int, default=None)
+    w.add_argument(
+        "--rich",
+        action="store_true",
+        help="watch a canonical-v2 store (keep rich tables)",
+    )
+    w.add_argument(
+        "--validate-every",
+        type=int,
+        default=4,
+        help="authoritative revalidation period in quiet windows",
+    )
     w.set_defaults(func=cmd_watch)
     return p
 

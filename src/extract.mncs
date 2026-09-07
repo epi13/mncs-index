@@ -1,0 +1,198 @@
+mncs 0.8;
+
+// mncs.index.extract.v1 — line-level source-record extraction decisions.
+//
+// Every function decides over one left-trimmed line (or token) prefix of
+// at most 64 bytes. The host splits files into lines, trims leading
+// spaces/tabs, slices names/targets, and applies these verdicts at corpus
+// scale (pressure/PRESS-005, PRESS-014); the verdicts themselves — which
+// keyword, which heading level, whether a `](` link or PRESS-ID/RFC shape
+// is present — are MNCS meaning, differentially tested in
+// `tests/test_rich_model.py`.
+//
+// Codes for `classify_decl`: 0 = other, 1 = module, 2 = fn,
+// 3 = record, 4 = use. The keyword must start at position 0 and be
+// followed by one ASCII space; the host guarantees the trim.
+module mncs.index.extract.v1;
+
+// Declaration keyword at position 0 of a left-trimmed line.
+fn classify_decl(line: [byte; up_to 64], length: u64) -> (result: u64) {
+    let n: u64 = select(length <= line.len, length, line.len);
+    if n >= 7 {
+        if (line[0] as u64) == 109 {
+            if (line[1] as u64) == 111 {
+                if (line[2] as u64) == 100 {
+                    if (line[3] as u64) == 117 {
+                        if (line[4] as u64) == 108 {
+                            if (line[5] as u64) == 101 {
+                                let s6: u64 = line[6] as u64;
+                                if s6 == 32 || s6 == 9 {
+                                    return 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (line[0] as u64) == 114 {
+            if (line[1] as u64) == 101 {
+                if (line[2] as u64) == 99 {
+                    if (line[3] as u64) == 111 {
+                        if (line[4] as u64) == 114 {
+                            if (line[5] as u64) == 100 {
+                                let s6: u64 = line[6] as u64;
+                                if s6 == 32 || s6 == 9 {
+                                    return 3;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if n >= 4 {
+        if (line[0] as u64) == 117 {
+            if (line[1] as u64) == 115 {
+                if (line[2] as u64) == 101 {
+                    let s3: u64 = line[3] as u64;
+                    if s3 == 32 || s3 == 9 {
+                        return 4;
+                    }
+                }
+            }
+        }
+    }
+    if n >= 3 {
+        if (line[0] as u64) == 102 {
+            if (line[1] as u64) == 110 {
+                let s2: u64 = line[2] as u64;
+                if s2 == 32 || s2 == 9 {
+                    return 2;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+// Markdown heading level over a left-trimmed line: 1..6 leading '#'
+// followed by one ASCII space; otherwise 0. Seven or more '#' is not a
+// heading (CommonMark: it is literal text).
+fn heading_level(line: [byte; up_to 64], length: u64) -> (result: u64) {
+    let n: u64 = select(length <= line.len, length, line.len);
+    if n == 0 {
+        return 0;
+    }
+    if (line[0] as u64) != 35 {
+        return 0;
+    }
+    iterate i over line carrying k: u64 = 0 {
+        let live: bool = i < n;
+        let extends: bool = live && i == k && (line[i] as u64) == 35;
+        next k = select(extends, k +% 1, k);
+    }
+    if k == 0 {
+        return 0;
+    }
+    if k > 6 {
+        return 0;
+    }
+    if k >= n {
+        return 0;
+    }
+    if (line[k] as u64) != 32 {
+        return 0;
+    }
+    return k;
+}
+
+// True iff the live prefix contains a `](` link seam.
+fn contains_link(line: [byte; up_to 64], length: u64) -> (result: bool) {
+    let n: u64 = select(length <= line.len, length, line.len);
+    iterate i over line carrying st: u64 = 0 {
+        let live: bool = i < n;
+        let v: u64 = line[i] as u64;
+        let close: bool = live && v == 93;
+        let open: bool = live && v == 40;
+        let saw_open: bool = st == 1 && open;
+        next st = select(st == 2 || saw_open, 2, select(close, 1, 0));
+    }
+    return st == 2;
+}
+
+// Exact PRESS-ID shape: `PRESS-` plus three ASCII digits (length 9).
+// The host finds `PRESS-` candidate windows in raw line bytes; this
+// predicate is the authority on whether the candidate is an ID.
+fn is_press_id(tok: [byte; up_to 32], length: u64) -> (result: bool) {
+    let n: u64 = select(length <= tok.len, length, tok.len);
+    if n != 9 {
+        return false;
+    }
+    if (tok[0] as u64) != 80 {
+        return false;
+    }
+    if (tok[1] as u64) != 82 {
+        return false;
+    }
+    if (tok[2] as u64) != 69 {
+        return false;
+    }
+    if (tok[3] as u64) != 83 {
+        return false;
+    }
+    if (tok[4] as u64) != 83 {
+        return false;
+    }
+    if (tok[5] as u64) != 45 {
+        return false;
+    }
+    iterate i over tok carrying ok: bool = true {
+        let live: bool = i < n && i >= 6;
+        let v: u64 = tok[i] as u64;
+        let digit: bool = v >= 48 && v <= 57;
+        next ok = ok && select(live, digit, true);
+    }
+    return ok;
+}
+
+// RFC token classes: 0 = other, 1 = `RFC`/`rfc` keyword (any ASCII case,
+// length 3), 2 = four ASCII digits (length 4), 3 = `RFCS`/`rfcs` keyword
+// (any ASCII case, length 4, for `rfcs/0003-...` path mentions). The host
+// pairs an adjacent keyword+number token pair in line-token order into an
+// `rfc-ref` relationship; the token shapes are MNCS meaning.
+fn classify_rfc_token(tok: [byte; up_to 32], length: u64) -> (result: u64) {
+    let n: u64 = select(length <= tok.len, length, tok.len);
+    if n == 3 {
+        let a: u64 = tok[0] as u64;
+        let b: u64 = tok[1] as u64;
+        let c: u64 = tok[2] as u64;
+        let ra: bool = a == 82 || a == 114;
+        let fb: bool = b == 70 || b == 102;
+        let cc: bool = c == 67 || c == 99;
+        if ra && fb && cc {
+            return 1;
+        }
+        return 0;
+    }
+    if n == 4 {
+        let a: u64 = tok[0] as u64;
+        let b: u64 = tok[1] as u64;
+        let c: u64 = tok[2] as u64;
+        let d: u64 = tok[3] as u64;
+        let ra: bool = a == 82 || a == 114;
+        let fb: bool = b == 70 || b == 102;
+        let cc: bool = c == 67 || c == 99;
+        let sd: bool = d == 83 || d == 115;
+        if ra && fb && cc && sd {
+            return 3;
+        }
+        let digits: bool = (a >= 48 && a <= 57) && (b >= 48 && b <= 57) && (c >= 48 && c <= 57) && (d >= 48 && d <= 57);
+        if digits {
+            return 2;
+        }
+        return 0;
+    }
+    return 0;
+}

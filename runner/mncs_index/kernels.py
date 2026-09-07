@@ -21,6 +21,8 @@ KIND_SRC = "kind.mncs"
 KIND_MOD = "mncs.index.kind.v1"
 ORDER_SRC = "order.mncs"
 ORDER_MOD = "mncs.index.order.v1"
+EXTRACT_SRC = "extract.mncs"
+EXTRACT_MOD = "mncs.index.extract.v1"
 
 MASK64 = (1 << 64) - 1
 FNV_BASIS = 14695981039346656037
@@ -55,6 +57,11 @@ class Kernels:
         self._kind: dict[bytes, int] = {}
         self._token_valid: dict[bytes, bool] = {}
         self._token_digest: dict[bytes, int] = {}
+        self._decl: dict[bytes, int] = {}
+        self._heading: dict[bytes, int] = {}
+        self._link: dict[bytes, bool] = {}
+        self._press: dict[bytes, bool] = {}
+        self._rfc: dict[bytes, int] = {}
 
     # -- digest.v1 ------------------------------------------------------
     def empty_digest(self) -> int:
@@ -276,3 +283,103 @@ class Kernels:
                 u64(new_digest),
             ],
         )
+
+    # -- extract.v1 ---------------------------------------------------------
+    # Line/token verdicts for the canonical-v2 normalized model. Pure and
+    # referentially transparent like the scan kernels above: cached by
+    # input bytes, meaning unchanged.
+    def _cached_call(self, cache: dict, key: bytes, fn):
+        with self._lock:
+            hit = cache.get(key)
+        if hit is None:
+            hit = fn()
+            with self._lock:
+                cache[key] = hit
+        return hit
+
+    def classify_decl(self, line: bytes) -> int:
+        """0 other, 1 module, 2 fn, 3 record, 4 use (line left-trimmed)."""
+        if len(line) > 64:
+            raise ValueError("decl line exceeds 64-byte kernel bound")
+        return self._cached_call(
+            self._decl,
+            line,
+            lambda: self.b.call_u64(
+                EXTRACT_SRC,
+                EXTRACT_MOD,
+                "classify_decl",
+                [seq_bytes(line), u64(len(line))],
+            ),
+        )
+
+    def heading_level(self, line: bytes) -> int:
+        """Markdown heading level 1..6 over a left-trimmed line, else 0."""
+        if len(line) > 64:
+            raise ValueError("heading line exceeds 64-byte kernel bound")
+        return self._cached_call(
+            self._heading,
+            line,
+            lambda: self.b.call_u64(
+                EXTRACT_SRC,
+                EXTRACT_MOD,
+                "heading_level",
+                [seq_bytes(line), u64(len(line))],
+            ),
+        )
+
+    def contains_link(self, line: bytes) -> bool:
+        """True iff the line window holds a `](` link seam."""
+        if len(line) > 64:
+            raise ValueError("link line exceeds 64-byte kernel bound")
+        return self._cached_call(
+            self._link,
+            line,
+            lambda: self.b.call_bool(
+                EXTRACT_SRC,
+                EXTRACT_MOD,
+                "contains_link",
+                [seq_bytes(line), u64(len(line))],
+            ),
+        )
+
+    def is_press_id(self, tok: bytes) -> bool:
+        """Exact `PRESS-` + 3 digits shape (length 9)."""
+        if len(tok) > 32:
+            raise ValueError("press token exceeds 32-byte kernel bound")
+        return self._cached_call(
+            self._press,
+            tok,
+            lambda: self.b.call_bool(
+                EXTRACT_SRC,
+                EXTRACT_MOD,
+                "is_press_id",
+                [seq_bytes(tok), u64(len(tok))],
+            ),
+        )
+
+    def classify_rfc_token(self, tok: bytes) -> int:
+        """0 other, 1 RFC keyword, 2 four-digit number, 3 RFCS keyword."""
+        if len(tok) > 32:
+            raise ValueError("rfc token exceeds 32-byte kernel bound")
+        return self._cached_call(
+            self._rfc,
+            tok,
+            lambda: self.b.call_u64(
+                EXTRACT_SRC,
+                EXTRACT_MOD,
+                "classify_rfc_token",
+                [seq_bytes(tok), u64(len(tok))],
+            ),
+        )
+
+    def fold_bytes(self, data: bytes) -> int:
+        """MNCS fold of arbitrary bytes: chunked `fold_window` thread.
+
+        Same fold definition as content digests, so name/title digests
+        share the scheme; chunking is host plumbing over unbounded text
+        (PRESS-005/014), the step is the kernel.
+        """
+        state = FNV_BASIS
+        for off in range(0, len(data), 64):
+            state = self.fold_window(state, data[off : off + 64])
+        return state
