@@ -1,0 +1,17 @@
+# MNCS/compiler output
+build/
+dist/
+target/
+*.o
+*.obj
+*.wasm
+*.ptx
+
+# Index artifacts
+.mncs-index/
+*.mncs-index
+
+# Editors / OS
+.DS_Store
+*.swp
+*~
