@@ -11,57 +11,60 @@ The roadmap is intentionally proof-driven. A phase advances only when its invari
 - [x] incremental/watch RFC
 - [x] language-pressure methodology
 - [x] integration boundaries
-- [ ] executable MNCS project skeleton
-- [ ] repository-native conformance command
+- [x] executable MNCS project skeleton (kernels + thin runner + CLI)
+- [x] repository-native conformance command (`pytest tests/`; `mncs-index build/query/watch`)
 
 ## Phase 1 — Deterministic corpus index
 
 Goal: prove a local fixture corpus can be indexed concurrently with canonical output independent of worker count and scheduling.
 
-- [ ] deterministic file discovery snapshot
-- [ ] bounded discovery-to-parse queue
-- [ ] concurrent parsing workers
-- [ ] canonical record normalization
-- [ ] ordered deterministic merge
-- [ ] canonical serialization and hash
-- [ ] worker-count equivalence matrix
-- [ ] randomized scheduling pressure
-- [ ] cancellation and graceful shutdown
-- [ ] language-pressure evidence
+- [x] deterministic file discovery snapshot (`discover.py`, `snapshot_id`)
+- [x] bounded discovery-to-parse queue (`queue.Queue(maxsize=...)`, backpressure tested)
+- [x] concurrent parsing workers (read pool + kernel pool, `max_in_flight` evidence)
+- [x] canonical record normalization (MNCS kernels)
+- [x] ordered deterministic merge (MNCS-specified rule + differential tests)
+- [x] canonical serialization and hash (canonical bytes + SHA-256 + MNCS fold)
+- [x] worker-count equivalence matrix (1/2/4/8/16/32, fixtures + stress)
+- [x] randomized scheduling pressure (seed shuffle, delay injection, queue sizes)
+- [x] cancellation and graceful shutdown (drain protocol, cancel tests)
+- [x] language-pressure evidence (12 registry entries + 3 reproducers)
 
-Exit criterion: the same corpus/configuration produces the same canonical hash under repeated runs and materially different concurrency configurations.
+Exit criterion: the same corpus/configuration produces the same canonical hash under repeated runs and materially different concurrency configurations. **Met** (`test_determinism.py`, `test_stress.py`).
 
 ## Phase 2 — Incremental indexing
 
-- [ ] content-addressed source identity
-- [ ] dependency/invalidation graph
-- [ ] changed-input recomputation
-- [ ] deletion/tombstone handling
-- [ ] atomic snapshot publication
-- [ ] stale-work suppression
-- [ ] event coalescing
-- [ ] rebuild-vs-incremental equivalence tests
+- [x] content-addressed source identity (Merkle file digests, MNCS-computed)
+- [x] changed-input recomputation (hint triage + MNCS `classify_change`)
+- [x] deletion/tombstone handling (verdict 2, records dropped)
+- [x] atomic snapshot publication (validate + tmp/rename HEAD swap)
+- [x] stale-work suppression (per-run assembly; no cross-generation writes)
+- [x] event coalescing (watcher quiet-period; hints never become truth)
+- [x] rebuild-vs-incremental equivalence tests (add/remove/change/rename/multi/chained)
+- [ ] dependency/invalidation graph (no inter-file references yet — no edges to invalidate)
+- [ ] rename detection as move (currently remove+add; equivalence holds, history does not link)
 
-Exit criterion: an incrementally updated index is canonically equivalent to a clean rebuild from the resulting snapshot.
+Exit criterion: an incrementally updated index is canonically equivalent to a clean rebuild from the resulting snapshot. **Met** (`test_incremental.py`).
 
 ## Phase 3 — Query engine
 
-- [ ] exact identity lookup
-- [ ] field filtering
-- [ ] relationship traversal
-- [ ] provenance lookup
-- [ ] deterministic ranking/order contract
-- [ ] snapshot-consistent concurrent queries
-- [ ] query cancellation/budgets
+- [x] exact identity lookup (digest)
+- [x] field filtering (kind, path)
+- [x] provenance lookup (snapshot id + generation on every result)
+- [x] deterministic ranking/order contract (canonical order, tested)
+- [x] snapshot-consistent concurrent queries (one snapshot per engine; parallel MNCS predicate eval)
+- [x] query cancellation/budgets (result limits with explicit `limited` flag; time budgets not yet)
+- [ ] relationship traversal (no relationship records emitted yet)
+- [ ] diagnostic/pressure lookup (planned record kinds)
 
 ## Phase 4 — MNCS ecosystem ingestion
 
-- [ ] source/compiler records
-- [ ] RFC/document records
-- [ ] tests and diagnostics
-- [ ] language-pressure findings
-- [ ] git/project metadata
-- [ ] harness/CI evidence
+- [x] first real-corpus evidence (mncs-language library + self-corpus; see `evidence/`)
+- [ ] source/compiler records (needs `mncs-ingest` normalized records)
+- [ ] RFC/document records beyond file-level (section-aware extraction)
+- [ ] tests and diagnostics as record kinds
+- [ ] language-pressure findings as records
+- [ ] git/project metadata adapters
+- [ ] harness/CI evidence adapters
 - [ ] integration with `mncs-ingest`
 - [ ] integration with `mncs-memory`
 
@@ -77,3 +80,14 @@ After local concurrency semantics are stable:
 - [ ] cross-machine reproducibility
 
 The distributed phase must not weaken the local determinism invariant.
+
+## Next language work (for the `mncs-language` campaign)
+
+Ranked by unblock value for this project:
+
+1. PRESS-010 — in-process or batch kernel invocation (stress economics).
+2. PRESS-001/002 — threads/tasks + bounded channels with close semantics.
+3. PRESS-003 — effect-gated filesystem traversal/read.
+4. PRESS-006 — cryptographic digest primitive (or explicit non-goal).
+5. PRESS-004 — integer bitwise operators.
+6. PRESS-005 — `u64` traversal domains; unbounded-text story.

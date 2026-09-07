@@ -1,0 +1,98 @@
+mncs 0.8;
+
+// mncs.index.scan.v1 — byte classification and symbol-token validation.
+//
+// The host splits file bytes into tokens on `classify_byte` class-3
+// boundaries (unbounded splitting is host-side plumbing; see
+// pressure/PRESS-005). Every semantic byte decision below is MNCS:
+// which bytes are spaces, newlines, or symbol characters, and whether a
+// candidate token is a well-formed symbol (`[A-Za-z_][A-Za-z0-9_]*`,
+// length 1..32).
+module mncs.index.scan.v1;
+
+// 0 = other, 1 = newline (\n), 2 = horizontal/other space, 3 = symbol char.
+fn classify_byte(b: byte) -> (result: u64) {
+    let v: u64 = b as u64;
+    if v == 10 {
+        return 1;
+    }
+    if v == 32 {
+        return 2;
+    }
+    if v == 9 {
+        return 2;
+    }
+    if v == 13 {
+        return 2;
+    }
+    if v == 95 {
+        return 3;
+    }
+    if v >= 48 {
+        if v <= 57 {
+            return 3;
+        }
+    }
+    if v >= 65 {
+        if v <= 90 {
+            return 3;
+        }
+    }
+    if v >= 97 {
+        if v <= 122 {
+            return 3;
+        }
+    }
+    return 0;
+}
+
+// A well-formed symbol token: every byte is class 3, length in 1..32,
+// and the first byte is not an ASCII digit.
+fn is_symbol_token(tok: [byte; up_to 32], length: u64) -> (result: bool) {
+    if length == 0 {
+        return false;
+    }
+    if length > 32 {
+        return false;
+    }
+    let first: u64 = tok[0] as u64;
+    if first >= 48 {
+        if first <= 57 {
+            return false;
+        }
+    }
+    iterate i over tok carrying ok: bool = true {
+        let live: bool = i < length;
+        let v: u64 = tok[i] as u64;
+        let sym: bool = v == 95 || (v >= 48 && v <= 57) || (v >= 65 && v <= 90) || (v >= 97 && v <= 122);
+        next ok = ok && select(live, sym, true);
+    }
+    return ok;
+}
+
+// FNV-inspired xor-free digest of a token (same step as digest.v1, so
+// token identity and content identity share one fold definition).
+fn token_digest(tok: [byte; up_to 32], length: u64) -> (result: u64) {
+    iterate i over tok carrying h: u64 = 14695981039346656037 {
+        let live: bool = i < length;
+        let added: u64 = h +% select(live, tok[i] as u64, 0);
+        let mulled: u64 = select(live, added *% 1099511628211, h);
+        next h = select(live, mulled +% (mulled >> 29), h);
+    }
+    return h;
+}
+
+// Batch validation of up to 8 candidate tokens; bit k of the result is 1
+// iff slot k holds a well-formed symbol. Zero-length slots validate as
+// false, so short batches pad with empty slots and the host masks nothing.
+fn validate8(t0: [byte; up_to 32], l0: u64, t1: [byte; up_to 32], l1: u64, t2: [byte; up_to 32], l2: u64, t3: [byte; up_to 32], l3: u64, t4: [byte; up_to 32], l4: u64, t5: [byte; up_to 32], l5: u64, t6: [byte; up_to 32], l6: u64, t7: [byte; up_to 32], l7: u64) -> (result: u64) {
+    let b0: u64 = select(is_symbol_token(t0, l0), 1, 0);
+    let b1: u64 = select(is_symbol_token(t1, l1), 2, 0);
+    let b2: u64 = select(is_symbol_token(t2, l2), 4, 0);
+    let b3: u64 = select(is_symbol_token(t3, l3), 8, 0);
+    let b4: u64 = select(is_symbol_token(t4, l4), 16, 0);
+    let b5: u64 = select(is_symbol_token(t5, l5), 32, 0);
+    let b6: u64 = select(is_symbol_token(t6, l6), 64, 0);
+    let b7: u64 = select(is_symbol_token(t7, l7), 128, 0);
+    return b0 +% b1 +% b2 +% b3 +% b4 +% b5 +% b6 +% b7;
+}

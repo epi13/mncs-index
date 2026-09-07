@@ -42,6 +42,14 @@ Worker failures are explicit results. Partial success must be intentional and pr
 
 At minimum, a fixture corpus should be indexed repeatedly with multiple worker counts and randomized delay/scheduling perturbations. Canonical hash and deterministic queries must agree.
 
+## Implementation note (first pass)
+
+Proven by `tests/test_determinism.py` (workers 1/2/4/8, seeds, delays,
+queue sizes) and `tests/test_stress.py` (up to 32 workers). Concurrency
+itself is host-threaded (PRESS-001/002); the invariant is enforced by
+keeping every semantic decision in MNCS kernels and every ordering choice
+in the canonical merge.
+
 ## Why this matters to MNCS-language
 
 This workload pressures semantics that simple thread benchmarks do not: ownership transfer, channel closure, cancellation, deterministic fan-in, failure trees, and immutable publication.

@@ -47,3 +47,13 @@ The hash algorithm itself must be versioned so migrations are explicit.
 ## Immutability
 
 Published snapshots are logically immutable. Incremental work constructs a successor snapshot and publishes it atomically after validation/canonicalization.
+
+## Implementation note (first pass)
+
+Canonical bytes cover format marker, discovery snapshot id, and records
+only; the store generation is publication metadata, so identical content
+hashes identically at any generation. Record identity is `(kind, path,
+seq)` with an MNCS-computed content digest; per-record establishment
+generation is tracked in non-canonical store sidecar (`established`) so it
+cannot break `incremental == rebuild`. Dual digests: host SHA-256 plus an
+MNCS fold over the canonical bytes (PRESS-006).

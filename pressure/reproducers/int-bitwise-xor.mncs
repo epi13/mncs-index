@@ -1,0 +1,12 @@
+mncs 0.8;
+
+// PRESS-004 reproducer: integer bitwise operators are unavailable.
+// `byte` supports `& | ^`, but the same operators on `u64` are rejected
+// (MNE103: returned value type does not match). The classic FNV-1a
+// xor-fold is therefore inexpressible; mncs-index uses a documented
+// xor-free multiply-add/shift fold instead.
+module pressure.int_bitwise;
+
+fn xor_u64(a: u64, b: u64) -> (result: u64) {
+    return a ^ b;
+}

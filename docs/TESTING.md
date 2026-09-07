@@ -56,3 +56,24 @@ Conformance tests should be deterministic and reasonably bounded for CI. Stress 
 ## Backend pressure
 
 Where MNCS backends differ in threading/runtime capability, record which backend executed each test. Backend-specific success must not be generalized into language-wide conformance without evidence.
+
+## Current evidence (first working pass)
+
+All execution goes through the reference executor via `mncs execute`
+(one subprocess per kernel call; see PRESS-010 for the cost).
+
+- Determinism matrix: workers 1/2/4/8 (+16/32 on stress), seeds,
+  delay injection, queue sizes 1–256 — identical `index_hash` and
+  `mncs_fingerprint` throughout (`test_determinism.py`, `test_stress.py`).
+- Overlap proof: bridge `max_in_flight >= 2` asserted on a real build.
+- Incremental equivalence: add/remove/change/rename/unchanged/multi/chained
+  (`test_incremental.py`).
+- Differential: kernels vs independent oracles on seeded random inputs;
+  this caught a real word-boundary merge bug before review.
+- Failure: injected worker failure, starved step budget, broken binary,
+  unreadable file, pre-cancelled build — previous generation intact in all
+  cases (`test_failure.py`).
+- Backend note: kernels elaborate with zero diagnostics on the current
+  toolchain and additionally pass `source-study` validation in CI
+  (`index-ci.yml`). Multi-backend execution agreement (WASM/bytecode/LLVM)
+  for the kernels is future work.

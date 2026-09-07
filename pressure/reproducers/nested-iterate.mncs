@@ -1,0 +1,18 @@
+mncs 0.8;
+
+// PRESS-009 reproducer: nested `iterate` is rejected, so a two-dimensional
+// scan (outer positions x inner needle) cannot be written as nested loops.
+// mncs-index factors the inner scan into a called function
+// (`window_equal8`), which is accepted. Kept here to pin the diagnostic
+// and the approved workaround shape.
+module pressure.nested_iterate;
+
+fn contains_nested(hay: [byte; up_to 64], needle: [byte; 8]) -> (result: bool) {
+    iterate i over hay carrying found: bool = false {
+        iterate j over needle carrying same: bool = true {
+            next same = same && hay[i] == needle[j];
+        }
+        next found = found || same;
+    }
+    return found;
+}

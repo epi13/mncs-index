@@ -1,0 +1,16 @@
+mncs 0.8;
+
+// PRESS-003 reproducer: `u64` sequences cannot be `iterate` domains.
+// The `[i64; 4]` and `[byte; 4]` variants elaborate cleanly; both `u64`
+// variants fail with MNB101 ("sequence traversal domain must name a
+// resolvable element type"). There is no documented list of traversable
+// element types, so word-oriented kernels (u64 packing) are unusable and
+// mncs-index folds bytes one window (64 B) at a time instead.
+module pressure.u64_traversal;
+
+fn over_u64_4(xs: [u64; 4]) -> (result: u64) {
+    iterate i over xs carrying acc: u64 = 0 {
+        next acc = acc +% xs[i];
+    }
+    return acc;
+}
