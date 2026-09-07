@@ -22,6 +22,10 @@ from mncs_index.pipeline import BuildConfig
 from mncs_index.store import Store
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: megabyte-scale stress (use --run-slow)")
+
+
 def pytest_addoption(parser):
     parser.addoption("--run-slow", action="store_true", help="run slow stress tests")
 
