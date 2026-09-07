@@ -40,8 +40,8 @@ Exit criterion: the same corpus/configuration produces the same canonical hash u
 - [x] stale-work suppression (per-run assembly; no cross-generation writes)
 - [x] event coalescing (watcher quiet-period; hints never become truth)
 - [x] rebuild-vs-incremental equivalence tests (add/remove/change/rename/multi/chained)
-- [ ] dependency/invalidation graph (no inter-file references yet — no edges to invalidate)
-- [ ] rename detection as move (currently remove+add; equivalence holds, history does not link)
+- [x] dependency/invalidation graph (v2 records+relationships incrementally converge to clean rebuild across add/remove/rename/disappear/fan-out/cycles — `tests/test_graph_invalidation.py`; no transitive sets — PRESS-015)
+- [x] rename lineage as advisory move (verdicts stay remove+add; provable 1:1 content-identity links report `moved`, ambiguity resolves to remove+add — `runner/mncs_index/lineage.py`, `build --incremental` `lineage` output)
 
 Exit criterion: an incrementally updated index is canonically equivalent to a clean rebuild from the resulting snapshot. **Met** (`test_incremental.py`).
 
@@ -53,16 +53,17 @@ Exit criterion: an incrementally updated index is canonically equivalent to a cl
 - [x] deterministic ranking/order contract (canonical order, tested)
 - [x] snapshot-consistent concurrent queries (one snapshot per engine; parallel MNCS predicate eval)
 - [x] query cancellation/budgets (result limits with explicit `limited` flag; time budgets not yet)
-- [ ] relationship traversal (no relationship records emitted yet)
-- [ ] diagnostic/pressure lookup (planned record kinds)
+- [x] relationship traversal (single-hop v2 edges: defines/references/depends-on/rfc-ref; transitive closure not offered — PRESS-015)
+- [x] diagnostic/pressure lookup (v2 press records + `pressure` query)
 
 ## Phase 4 — MNCS ecosystem ingestion
 
 - [x] first real-corpus evidence (mncs-language library + self-corpus; see `evidence/`)
-- [ ] source/compiler records (needs `mncs-ingest` normalized records)
-- [ ] RFC/document records beyond file-level (section-aware extraction)
+- [x] multi-repo ecosystem index run (mncs-index + all locally available mncs-* repos, `*.mncs` source graph, 2+ worker counts converged; see `evidence/ecosystem-mncs-repos.json`, `scripts/run_ecosystem.py`)
+- [x] source/compiler records (v2 sym records: module/fn/record/use via `src/extract.mncs` — RFC 0007)
+- [x] RFC/document records beyond file-level (v2 heading + reference records)
 - [ ] tests and diagnostics as record kinds
-- [ ] language-pressure findings as records
+- [x] language-pressure findings as records (v2 press records + PRESS-014/015)
 - [ ] git/project metadata adapters
 - [ ] harness/CI evidence adapters
 - [ ] integration with `mncs-ingest`

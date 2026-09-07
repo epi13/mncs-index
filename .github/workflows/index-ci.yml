@@ -12,12 +12,23 @@ jobs:
   kernel-study:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Read locked mncs-language revision
+        id: language-lock
+        shell: bash
+        run: |
+          revision=$(python3 -c 'import json; print(json.load(open("mncs-language.lock.json"))["revision"])')
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
       - name: Check out mncs-language (pinned executor)
-        uses: actions/checkout@v4
+        # actions/checkout v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: epi13/mncs-language
+          ref: ${{ steps.language-lock.outputs.revision }}
           path: mncs-language
+          fetch-depth: 1
+          persist-credentials: false
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Build mncs executor
@@ -26,7 +37,7 @@ jobs:
       - name: Validate MNCS kernels elaborate cleanly
         run: |
           set -euo pipefail
-          for kernel in src/digest.mncs src/scan.mncs src/kind.mncs src/order.mncs; do
+          for kernel in src/digest.mncs src/scan.mncs src/kind.mncs src/order.mncs src/extract.mncs; do
             mncs-language/target/debug/mncs source-study "$kernel" --node-id "ci-${kernel//\//-}" \
               | python3 -c "import json,sys; d=json.load(sys.stdin); errs=[x for x in d['diagnostics'] if x.get('severity')=='error' or str(x.get('code',''))[:3] in ('MNE','MNB','MNP')]; assert not errs, errs; print('$kernel: clean')"
           done
@@ -46,12 +57,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: kernel-study
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Read locked mncs-language revision
+        id: language-lock
+        shell: bash
+        run: |
+          revision=$(python3 -c 'import json; print(json.load(open("mncs-language.lock.json"))["revision"])')
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
       - name: Check out mncs-language (pinned executor)
-        uses: actions/checkout@v4
+        # actions/checkout v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: epi13/mncs-language
+          ref: ${{ steps.language-lock.outputs.revision }}
           path: mncs-language
+          fetch-depth: 1
+          persist-credentials: false
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Build mncs executor

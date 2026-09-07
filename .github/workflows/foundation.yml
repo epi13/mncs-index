@@ -12,7 +12,8 @@ jobs:
   repository-contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Verify foundation contract
         shell: bash
         run: |
@@ -31,6 +32,7 @@ jobs:
             rfcs/0005-incremental-watch-model.md
             rfcs/0006-language-pressure-methodology.md
             pressure/registry.md
+            mncs-language.lock.json
           )
           for path in "${required[@]}"; do
             test -s "$path" || { echo "missing or empty: $path"; exit 1; }

@@ -10,6 +10,7 @@ target/
 # Index artifacts
 .mncs-index/
 *.mncs-index
+.ecosystem-stage/
 
 # Editors / OS
 .DS_Store
