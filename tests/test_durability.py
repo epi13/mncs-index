@@ -431,3 +431,108 @@ def test_check_command_fails_closed_on_corruption(tmp_path, capsys):
     assert cli_main(["check", "--store", store_dir, "--repair"]) == 1
     out = json.loads(capsys.readouterr().out)
     assert not out["ok"] and out["repaired"] == []
+
+
+# -- reclamation journal integrity ----------------------------------------
+
+
+def _publish_gen1(store):
+    snap, canon = _crash_candidate()
+    store.publish(snap, canon, {d.path: 1 for d in snap.docs}, {}, 0)
+    return snap
+
+
+def test_forged_reclaimed_journal_reports_gap(tmp_path):
+    """A forged `.reclaimed` entry cannot hide a lost generation.
+
+    `check()` trusts the journal only with a valid checksum; a torn
+    or forged record fails closed toward GEN_GAP, never silence.
+    """
+    store_dir = str(tmp_path / "store")
+    store, _seed = _seeded_store(store_dir)
+    _publish_gen1(store)
+    assert store.reclaim()["removed"] == [0]
+    assert store.check()["ok"]
+    # Forge: claim gen 0 reclaimed without a valid checksum.
+    with open(os.path.join(store_dir, ".reclaimed"), "w") as fh:
+        json.dump({"reclaimed": [0], "sha256": "0" * 64}, fh)
+    report = Store(store_dir).check()
+    assert not report["ok"]
+    assert "GEN_GAP" in _codes(report)
+    # Repair must not bless the forgery by deleting or rewriting it.
+    assert Store(store_dir).repair() == []
+    assert "GEN_GAP" in _codes(Store(store_dir).check())
+
+
+def test_reclaimed_tmp_orphan_reported_and_repaired(tmp_path):
+    """A crash inside `_write_reclaimed` leaves reportable staging."""
+    store_dir = str(tmp_path / "store")
+    store, _seed = _seeded_store(store_dir)
+    with open(os.path.join(store_dir, ".reclaimed.tmp"), "w") as fh:
+        fh.write('{"reclaimed": []}')
+    report = store.check()
+    assert "ORPHAN_TMP" in _codes(report)
+    assert any(
+        i["detail"].endswith(".reclaimed.tmp") for i in report["issues"]
+    )
+    assert store.repair() == [".reclaimed.tmp"]
+    assert store.check()["ok"]
+
+
+def test_manifest_corrupt_reported_never_repaired(tmp_path):
+    """`.compact.json` health is checked; repair never deletes state."""
+    store_dir = str(tmp_path / "store")
+    store, _seed = _seeded_store(store_dir)
+    assert "MANIFEST_CORRUPT" not in _codes(store.check())
+    with open(os.path.join(store_dir, ".compact.json"), "w") as fh:
+        fh.write("{truncated")
+    report = store.check()
+    assert "MANIFEST_CORRUPT" in _codes(report)
+    assert store.repair() == []
+    assert os.path.exists(os.path.join(store_dir, ".compact.json"))
+    with open(os.path.join(store_dir, ".compact.json"), "w") as fh:
+        json.dump({"schedule": 42}, fh)
+    assert "MANIFEST_CORRUPT" in _codes(store.check())
+
+
+def test_l0_gc_issues_no_barriers(tmp_path, monkeypatch):
+    """L0 means no storage barriers on ANY path, including GC."""
+    syncs = []
+    orig = store_mod._fsync_dir
+
+    def counting(path):
+        syncs.append(path)
+        return orig(path)
+
+    monkeypatch.setattr(store_mod, "_fsync_dir", counting)
+    store, _seed = _seeded_store(str(tmp_path / "s0"), durability="L0")
+    _publish_gen1(store)
+    assert store.reclaim()["removed"] == [0]
+    assert syncs == []
+    store2, _seed2 = _seeded_store(str(tmp_path / "s2"), durability="L2")
+    _publish_gen1(store2)
+    assert store2.reclaim()["removed"] == [0]
+    assert len(syncs) >= 1
+
+
+def test_windows_dirsync_noop_and_msvcrt_lock(tmp_path, monkeypatch):
+    """Portability paths: nt dir-sync is a documented no-op; the msvcrt
+    lock branch issues exactly lock/unlock (POSIX runs this with a stub)."""
+    monkeypatch.setattr(os, "name", "nt")
+    assert store_mod._fsync_dir(str(tmp_path)) is False
+    calls = []
+
+    class _StubMsvcrt:
+        LK_LOCK = 1
+        LK_UNLCK = 2
+
+        @staticmethod
+        def locking(fd, mode, nbytes):
+            calls.append((mode, nbytes))
+
+    monkeypatch.setattr(store_mod, "msvcrt", _StubMsvcrt)
+    monkeypatch.setattr(store_mod, "fcntl", None)
+    with open(os.path.join(str(tmp_path), "l"), "w") as fh:
+        store_mod._lock_file(fh)
+        store_mod._unlock_file(fh)
+    assert [mode for mode, _ in calls] == [1, 2]

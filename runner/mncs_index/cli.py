@@ -51,6 +51,32 @@ def cmd_check(args) -> int:
     return 0 if report["ok"] else 1
 
 
+def cmd_reclaim(args) -> int:
+    """Reclamation command (RFC 0009): delete only unpinned,
+    non-HEAD generations below HEAD (stale pins reaped first).
+    Never deletes HEAD, newer-than-HEAD artifacts, staging files,
+    or pins. Prints the JSON report; exit 0 always (reclamation
+    reports, it does not diagnose — use `check` for health)."""
+    store = Store(args.store)
+    report = store.reclaim(keep_recent=args.keep_recent)
+    print(json.dumps(report, indent=1))
+    return 0
+
+
+def cmd_compact(args) -> int:
+    """Compaction command (RFC 0010): deterministic in-place GC.
+
+    Deletes only schedule-selected unpinned generations below HEAD
+    (never HEAD, pinned generations, or newer-than-HEAD artifacts),
+    plus orphan staging tmps and superseded sidecars. Prints the
+    JSON report+metrics; exit 0 always (compaction reports, it does
+    not diagnose — use `check` for health)."""
+    store = Store(args.store)
+    report = store.compact(schedule=args.schedule, dry_run=args.dry_run)
+    print(json.dumps(report, indent=1))
+    return 0
+
+
 def cmd_build(args) -> int:
     kernels = _kernels(args)
     store = Store(args.store, durability=args.durability)
@@ -323,6 +349,31 @@ def build_parser() -> argparse.ArgumentParser:
         "corruption is never auto-repaired",
     )
     c.set_defaults(func=cmd_check)
+
+    r = sub.add_parser("reclaim", help="reclaim unpinned generations (RFC 0009)")
+    r.add_argument("--store", required=True)
+    r.add_argument(
+        "--keep-recent",
+        type=int,
+        default=0,
+        help="retain this many newest otherwise reclaimable generations",
+    )
+    r.set_defaults(func=cmd_reclaim)
+
+    k = sub.add_parser("compact", help="deterministic in-place compaction (RFC 0010)")
+    k.add_argument("--store", required=True)
+    k.add_argument(
+        "--schedule",
+        default="prune",
+        help="retention schedule: prune | keep-recent:N | checkpoint:N "
+        "(default %(default)s)",
+    )
+    k.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="compute victims and projected metrics without deleting anything",
+    )
+    k.set_defaults(func=cmd_compact)
     return p
 
 
