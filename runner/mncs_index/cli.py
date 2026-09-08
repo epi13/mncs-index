@@ -18,7 +18,7 @@ from .lineage import resolve as resolve_lineage
 from .model import hex16
 from .pipeline import BuildConfig
 from .query import QueryEngine
-from .store import Store
+from .store import DURABILITY_DEFAULT, DURABILITY_LEVELS, Store
 from .watch import Watcher
 
 
@@ -36,9 +36,24 @@ def _config(args) -> BuildConfig:
     )
 
 
+def cmd_check(args) -> int:
+    """Recovery/check command (RFC 0008): report store health, optionally
+    remove leftover staging files. Never guesses: only orphan temps are
+    repaired; HEAD/generation corruption stays reported for an operator."""
+    store = Store(args.store)
+    report = store.check()
+    repaired: list = []
+    if args.repair:
+        repaired = store.repair()
+        report = store.check()
+        report["repaired"] = repaired
+    print(json.dumps(report, indent=1))
+    return 0 if report["ok"] else 1
+
+
 def cmd_build(args) -> int:
     kernels = _kernels(args)
-    store = Store(args.store)
+    store = Store(args.store, durability=args.durability)
     head = store.head()
     rich = bool(getattr(args, "rich", False))
     if args.incremental and head is not None:
@@ -245,6 +260,12 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--delay-ms", type=float, default=0.0)
     b.add_argument("--incremental", action="store_true")
     b.add_argument(
+        "--durability",
+        choices=list(DURABILITY_LEVELS),
+        default=DURABILITY_DEFAULT,
+        help="commit durability level (RFC 0008; default %(default)s)",
+    )
+    b.add_argument(
         "--rich",
         action="store_true",
         help="build canonical-v2 (source/heading/reference/pressure records)",
@@ -292,6 +313,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="authoritative revalidation period in quiet windows",
     )
     w.set_defaults(func=cmd_watch)
+
+    c = sub.add_parser("check", help="check store health / recover (RFC 0008)")
+    c.add_argument("--store", required=True)
+    c.add_argument(
+        "--repair",
+        action="store_true",
+        help="remove leftover staging files only; HEAD/generation "
+        "corruption is never auto-repaired",
+    )
+    c.set_defaults(func=cmd_check)
     return p
 
 

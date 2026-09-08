@@ -23,6 +23,7 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 | PRESS-013 | P1 | synchronization/persistence | No durable compare-and-swap / transaction effects for cross-process publication | Host `flock`-guarded HEAD check-and-swap in `Store.publish` | `tests/test_publish.py` |
 | PRESS-014 | P2 | collections/stdlib | No unbounded lines, line splitting, substring slicing, or corpus-scale sort/dedup for rich extraction | Host line/span plumbing + 64 B kernel windows; sort/dedup at merge | `tests/test_rich_model.py` |
 | PRESS-015 | P3 | language semantics | No relation/table values or transitive graph traversal over extracted edges | Single-hop host indexes; no transitive queries | `tests/test_rich_model.py` |
+| PRESS-016 | P1 | persistence | No durable-commit effects (file fsync, directory fsync, crash-recovery check) in MNCS | Host `os.fsync`/dir-sync commit protocol + `check` in `Store` | `tests/test_durability.py` |
 
 ## PRESS-001 — No concurrency primitives (P0, concurrency, runtime)
 
@@ -457,6 +458,31 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   `tests/test_graph_invalidation.py` (fan-out, cycles, duplicates,
   deterministic ambiguity).
 - Classification: language semantics, stdlib.
+
+## PRESS-016 — No durable-commit effects (P1, persistence, runtime)
+
+- Observed: the RFC 0008 commit protocol (file `fsync` before each
+  rename, directory `fsync` after each rename, post-commit
+  verification re-read, crash-recovery `check`) is host-OS effects
+  code in `runner/mncs_index/store.py`. `mncs-language` RFC 0026
+  (persistence) implementation status is `NONE`, and no
+  durability/flush/sync effect exists to express "make this file and
+  its directory entry survive an OS crash".
+- Desired: effect-gated durable-commit primitives (file sync,
+  directory sync, or a single durable-commit effect) callable from
+  MNCS, so the L0–L3 levels are language-level guarantees rather than
+  host `os.fsync` calls.
+- Workaround: explicit `DURABILITY_LEVELS` with per-level barrier
+  counts pinned by `tests/test_durability.py::test_fsync_barriers_per_level`;
+  POSIX directory sync with a documented Windows best-effort
+  degradation (RFC 0008 portability).
+- Why the workaround is insufficient: durability lives outside the
+  language's effect system, so MNCS cannot name, audit, or test the
+  guarantee; a future `mncs-store` backend would re-implement rather
+  than reuse a language contract.
+- Evidence: `tests/test_durability.py` (barriers, real-death crash
+  matrix, corruption fail-closed, `check` command).
+- Classification: runtime (missing persistence effects).
 
 ## Not pressure (deliberate non-findings)
 
