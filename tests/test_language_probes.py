@@ -169,6 +169,80 @@ def test_task_invalid_transitions_rejected(binary, lib):
         {"integer": {"value": 0, "type": {"bits": 64, "signed": True}}}]
 
 
+def run_execute_file(binary: str, lib: str, prog: str, module: str,
+                     function: str, arguments: list) -> dict:
+    request = {"schema_version": "0.1",
+               "target": {"module": module, "function": function},
+               "arguments": arguments, "step_budget": 100000}
+    env = dict(os.environ, MNCS_LIBRARY_PATH=lib)
+    proc = subprocess.run(
+        [binary, "execute", os.path.join(REPRO, prog), "/dev/stdin"],
+        input=json.dumps(request), capture_output=True, text=True,
+        timeout=60, cwd=REPO, env=env)
+    assert proc.returncode == 0, \
+        f"{prog}::{function}: rc={proc.returncode} {proc.stdout[:500]}"
+    return json.loads(proc.stdout)
+
+
+def u64_arg(value: int) -> dict:
+    return {"integer": {"value": value,
+                        "type": {"bits": 64, "signed": False}}}
+
+
+def byte_seq_arg(data: bytes) -> dict:
+    return {"sequence": {"values": [{"byte": {"value": b}} for b in data]}}
+
+
+def test_int_bitwise_u64_fixed_slice7(binary, lib):
+    """PRESS-004 acceptance: integer ^ & | on u64 elaborate and execute.
+
+    Slice-7 rerun 2026-09-08: mncs-language stage-b1 made bitwise ops
+    total over all eight integer widths, so the former MNE103 reproducer
+    now returns exact values (12^10=6, 12&10=8, 12|10=14).
+    """
+    for function, want in (("xor_u64", 6), ("and_u64", 8),
+                           ("or_u64", 14)):
+        result = run_execute_file(
+            binary, lib, "int-bitwise-xor.mncs", "pressure.int_bitwise",
+            function, [u64_arg(12), u64_arg(10)])
+        assert result["status"] == "returned", result
+        assert result["returned"] == [u64_arg(want)], result["returned"]
+
+
+def test_nested_two_level_profile011_slice7(binary, lib):
+    """PRESS-009 acceptance: two-level nest runs under profile 0.11.
+
+    Slice-7 rerun 2026-09-08: the exact nested shape still fails MNE147
+    under 0.8 (pinned below) but elaborates and executes as
+    `nested-iterate-011.mncs` under 0.11. Haystack holds no full copy of
+    the 8-byte needle, so the verdict must be false.
+    """
+    hay = byte_seq_arg(bytes(list(b"hello needle world!!")[:20]))
+    needle = byte_seq_arg(b"needle!!")
+    result = run_execute_file(binary, lib, "nested-iterate-011.mncs",
+                              "pressure.nested_iterate_011",
+                              "contains_nested", [hay, needle])
+    assert result["status"] == "returned", result
+    assert result["returned"] == [{"boolean": {"value": False}}], \
+        result["returned"]
+
+
+def test_nested_still_refused_below_011_slice7(binary, lib):
+    """PRESS-009 boundary: the 0.8 reproducer still fails MNE147."""
+    env = dict(os.environ, MNCS_LIBRARY_PATH=lib)
+    request = {"schema_version": "0.1",
+               "target": {"module": "pressure.nested_iterate",
+                          "function": "contains_nested"},
+               "arguments": [], "step_budget": 100000}
+    proc = subprocess.run(
+        [binary, "execute",
+         os.path.join(REPRO, "nested-iterate.mncs"), "/dev/stdin"],
+        input=json.dumps(request), capture_output=True, text=True,
+        timeout=60, cwd=REPO, env=env)
+    assert proc.returncode != 0, proc.stdout[:500]
+    assert "MNE147" in proc.stdout, proc.stdout[:500]
+
+
 def test_probes_elaborate_cleanly(binary, lib):
     env = dict(os.environ, MNCS_LIBRARY_PATH=lib)
     for prog in ("probe-host-read.mncs", "probe-sha256-abc.mncs",

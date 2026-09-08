@@ -1,0 +1,19 @@
+mncs 0.11;
+
+// PRESS-009 slice-7 acceptance: the exact two-level nested-`iterate`
+// shape rejected under profiles <=0.10 (MNE147) elaborates and executes
+// under profile 0.11 (one bounded iteration inside another, distinct
+// identities). Kept beside `nested-iterate.mncs` (0.8, still MNE147 by
+// design) to pin the profile boundary. Third-level nesting stays
+// refused (MNE147) on every profile.
+module pressure.nested_iterate_011;
+
+fn contains_nested(hay: [byte; up_to 64], needle: [byte; 8]) -> (result: bool) {
+    iterate i over hay carrying found: bool = false {
+        iterate j over needle carrying same: bool = true {
+            next same = same && hay[i] == needle[j];
+        }
+        next found = found || same;
+    }
+    return found;
+}

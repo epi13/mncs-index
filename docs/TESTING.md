@@ -81,6 +81,14 @@ All execution goes through the reference executor via `mncs execute`
   (`test_snapshot_isolation.py`).
 - Differential: kernels vs independent oracles on seeded random inputs;
   this caught a real word-boundary merge bug before review.
+- Scale: hermetic family-style corpus (own `*.mncs` sources) converges
+  across worker counts with full rich metrics; a batched five-class
+  mutation (change/add/remove/rename/RFC+pressure) proves incremental
+  == rebuild on every table plus traversal/invalidation agreement under
+  both the MNCS verdict and the host mirror, with PRESS-010 economics
+  measured from the bridge counter (`test_scale.py`,
+  `runner/mncs_index/ecosystem.py`). The cross-repo family tier runs as
+  evidence (`scripts/run_ecosystem.py --tier family --mutations`).
 - Failure: injected worker failure, starved step budget, broken binary,
   unreadable file, pre-cancelled build — previous generation intact in all
   cases (`test_failure.py`).

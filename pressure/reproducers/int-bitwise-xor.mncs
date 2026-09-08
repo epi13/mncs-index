@@ -10,3 +10,13 @@ module pressure.int_bitwise;
 fn xor_u64(a: u64, b: u64) -> (result: u64) {
     return a ^ b;
 }
+
+// Slice-7 extension (2026-09-08): stage-b1 made `& |` total over all
+// integer widths too, so the full operator family is pinned here.
+fn and_u64(a: u64, b: u64) -> (result: u64) {
+    return a & b;
+}
+
+fn or_u64(a: u64, b: u64) -> (result: u64) {
+    return a | b;
+}

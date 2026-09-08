@@ -86,18 +86,34 @@ operator. Startup performs no repair at all (offline `check
 
 ## mncs-store boundary
 
-No `mncs-store` checkout exists in the ecosystem evidence
-(`evidence/ecosystem-mncs-repos.json`), so this section is a forward
-boundary, not an integration report. The file store is the local
-durability substrate; if a shared `mncs-store` backend appears, the
-integration surface is: the `Store` logical contract (generation CAS,
-`expected_base`, `StaleGenerationError`, fail-closed loads), the
-`check()` report schema above, and the on-disk layout
-(`gen-NNNNNN.json`, `HEAD`, `.HEAD.tmp`, `.gen-*.tmp`,
-`.HEAD.lock`). Logical semantics are backend-independent: any
+A sibling `mncs-store` checkout exists in this workspace
+(`../mncs-store`, own RFCs/ROADMAP/src/tests), but no integration has
+been performed: this section is a forward boundary plus a review
+invitation, not an integration report. `mncs-index` must not grow a
+second general-purpose storage system — the ~1300-line
+`runner/mncs_index/store.py` (generations, HEAD CAS, L0–L3, pins,
+reclaim, compact, check/repair, manifests) is deliberately the
+*minimal index-shaped* durability substrate, and any generic
+capability in it is a porting candidate, not a second home.
+
+If a shared `mncs-store` backend appears, the integration surface is:
+the `Store` logical contract (generation CAS, `expected_base`,
+`StaleGenerationError`, fail-closed loads), the `check()` report
+schema above, and the on-disk layout (`gen-NNNNNN.json`, `HEAD`,
+`.HEAD.tmp`, `.gen-*.tmp`, `.HEAD.lock`, `.pins/`, `.reclaimed`,
+`.compact.json`). Logical semantics are backend-independent: any
 replacement must preserve old-or-new-never-torn publication,
 durable-after-ack at L2-equivalent, and the no-guessing recovery
-contract — verified by porting `tests/test_durability.py`.
+contract — verified by porting `tests/test_durability.py`,
+`tests/test_mvcc.py`, and `tests/test_compact.py`.
+
+What `mncs-index` needs from storage (stable regardless of backend):
+immutable generation put, content-addressed lookup by index hash,
+atomic generation CAS, snapshot pin/protect semantics, durable
+commit with explicit levels, deterministic generation scan, and a
+reclamation contract for unpinned generations. Everything else in
+`store.py` (JSON envelopes, canonical-hash validation, lineage,
+CLI surface) stays index-side.
 
 ## Portability
 
@@ -119,6 +135,17 @@ expression; recorded as PRESS-016.
   exact `check()` codes asserted); corruption matrix failing closed
   (loads raise, `check` reports, `repair` touches tmps only); `check`
   command exit codes and `--repair` semantics.
+- Explicitly NOT proven by test: survival of a real OS crash or power
+  loss. The suite proves barrier *issuance* and process-death
+  survival; OS-crash durability at L2/L3 holds by construction of the
+  rename+fsync protocol on correctly behaving POSIX filesystems (see
+  Portability above). Journal integrity (checksum, fail-closed
+  `GEN_GAP`), `.reclaimed.tmp` staging coverage, manifest health
+  reporting, L0 barrier-freedom on GC paths, and the Windows
+  no-op/lock branches are pinned directly.
+- Prior suites unmodified and green: `test_publish.py`,
+  `test_snapshot_isolation.py`, `test_failure.py` (durable default
+  changes no logical outcome).
 - Prior suites unmodified and green: `test_publish.py`,
   `test_snapshot_isolation.py`, `test_failure.py` (durable default
   changes no logical outcome).

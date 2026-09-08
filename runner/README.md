@@ -15,6 +15,8 @@ names the pressure entries that will delete it.
 | `indexer.py` | incremental orchestration | PRESS-001 |
 | `store.py` | durable atomic publication | PRESS-003 |
 | `query.py` | parallel query fan-out; unbounded search; single-hop graph lookup | PRESS-001, PRESS-005, PRESS-015 |
+| `graph.py` | bounded transitive traversal + invalidation sets (MNCS verdicts) | PRESS-015 |
+| `ecosystem.py` | tiered family-corpus staging + mutation batch + scale metrics (bytes only; verdicts stay kernels) | PRESS-010 |
 | `watch.py` | filesystem watching, clocks | PRESS-007 |
 | `cli.py` | process/CLI boundary | — |
 

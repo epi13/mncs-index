@@ -13,8 +13,9 @@ express; every such effect maps to a `pressure/` entry.
 | `kind.mncs` | `mncs.index.kind.v1` | Extension bytes to canonical kind rank |
 | `order.mncs` | `mncs.index.order.v1` | Lexicographic compare, record order, query match, change verdicts |
 | `extract.mncs` | `mncs.index.extract.v1` | Decl keywords, heading levels, link seams, PRESS/RFC token shapes |
+| `graph.mncs` | `mncs.index.graph.v1` | Bounded traversal verdicts (`should_visit`, `depth_next`); adjacency/identity/order stay host-side (PRESS-015) |
 
-All four target Source Profile 0.8, are dependency-free (no `use`
+All kernels target Source Profile 0.8, are dependency-free (no `use`
 imports, so `mncs execute` needs no library search path), and elaborate
 with zero `MNE`/`MNB`/`MNP` errors:
 
