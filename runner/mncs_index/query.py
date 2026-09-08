@@ -136,6 +136,70 @@ class QueryEngine:
         hits = [r for r in self.rel_by_dst.get(dst, []) if r.rel == "depends-on"]
         return self._finish_rich(hits, limit)
 
+    # -- transitive dependency traversal (bounded, deterministic) --
+    def dependencies(
+        self,
+        path: str,
+        max_depth: int = 64,
+        max_nodes: int = 4096,
+        kernels=None,
+    ):
+        """Files transitively needed by `path` (forward closure).
+
+        `kernels` selects the admission verdict: `None`/`True` (default)
+        uses the engine's MNCS handle (`self.k`, `should_visit` kernel),
+        `False` forces the exact host mirror, or pass a `Kernels`
+        instance explicitly. See `mncs_index.graph` for the
+        identity/visited/ordering/budget/cycle/duplicate contract.
+        """
+        from . import graph as _graph
+
+        k = self.k if kernels is None or kernels is True else kernels
+        if kernels is False:
+            k = None
+        return _graph.traverse_dependencies(
+            self.snap.rels, path, k, max_depth=max_depth, max_nodes=max_nodes
+        )
+
+    def transitive_dependents(
+        self,
+        node: str,
+        max_depth: int = 64,
+        max_nodes: int = 4096,
+        kernels=None,
+    ):
+        """Files transitively needing `node` (reverse closure).
+
+        `node` may be a file path or a symbol. Same kernels
+        convention as `dependencies`.
+        """
+        from . import graph as _graph
+
+        k = self.k if kernels is None or kernels is True else kernels
+        if kernels is False:
+            k = None
+        return _graph.traverse_dependents(
+            self.snap.rels, node, k, max_depth=max_depth, max_nodes=max_nodes
+        )
+
+    def invalidation_set(
+        self,
+        changed: list,
+        max_depth: int = 64,
+        max_nodes: int = 4096,
+        kernels=None,
+    ):
+        """Files to revalidate when `changed` files change."""
+        from . import graph as _graph
+
+        k = self.k if kernels is None or kernels is True else kernels
+        if kernels is False:
+            k = None
+        return _graph.invalidation_set(
+            self.snap.rels, list(changed), k,
+            max_depth=max_depth, max_nodes=max_nodes,
+        )
+
     def rfc_refs(self, num: str, limit=None) -> QueryResult:
         """`rfc-ref` edges for one RFC number, e.g. "0003"."""
         hits = [r for r in self.rel_by_dst.get(num, []) if r.rel == "rfc-ref"]

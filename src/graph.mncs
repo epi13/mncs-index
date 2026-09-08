@@ -1,0 +1,40 @@
+mncs 0.8;
+
+// mncs.index.graph.v1 — bounded graph-local traversal decisions.
+//
+// The dependency graph itself (edge tables, adjacency, visited sets,
+// corpus-scale ordering) lives host-side: MNCS has no relation/table
+// values, joins, or unbounded traversal (PRESS-015). What MNCS does
+// decide is the per-candidate admission verdict — visited, depth, and
+// budget are bounded scalar checks over one candidate node, so they
+// stay in-language while the host owns iteration, identity, and order.
+//
+// Host contract (runner/mncs_index/graph.py): a candidate node at
+// `depth` edges from the root is admitted iff it is unvisited, within
+// `max_depth`, and below `max_nodes`; first visit wins, so cycles and
+// duplicate edges terminate. The host mirrors this verdict exactly
+// when no kernels handle is supplied (differentially pinned).
+module mncs.index.graph.v1;
+
+// Admit one traversal candidate: 1 = visit, 0 = skip.
+// `visited` latency: the host's visited set; `depth`/`max_depth` count
+// edges from the root (root = 0); `used`/`limit` count already-emitted
+// nodes against the node budget.
+fn should_visit(visited: bool, depth: u64, max_depth: u64, used: u64, limit: u64) -> (result: u64) {
+    if visited {
+        return 0;
+    }
+    if max_depth < depth {
+        return 0;
+    }
+    if limit <= used {
+        return 0;
+    }
+    return 1;
+}
+
+// Next BFS layer depth (wrapping: the caller clamps by max_depth first,
+// so overflow only arises past budgets the host never issues).
+fn depth_next(depth: u64) -> (result: u64) {
+    return depth +% 1;
+}

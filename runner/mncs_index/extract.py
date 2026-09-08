@@ -9,8 +9,9 @@ The host only splits bytes into lines, trims ASCII space/tab, slices
 candidate name/target spans, scans 64 B windows (1 B overlap) for seams
 past the first window, pairs adjacent RFC tokens, and sorts/dedups at
 corpus scale (pressure/PRESS-005, PRESS-014). Single-hop relationship
-lookup is queryable; transitive graph traversal is a documented
-non-goal (PRESS-015).
+lookup is queryable; bounded transitive traversal over these rows
+lives in `mncs_index.graph` (MNCS admission verdicts plus
+host-explicit structure, PRESS-015).
 
 Record identities (RFC 0007): sym = (path, sym, name); heading =
 positional (path, seq); rel = (rel, src, dst); press = (path, pid).

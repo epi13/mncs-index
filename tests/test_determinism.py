@@ -2,7 +2,9 @@
 canonical meaning under any worker count, schedule, or enumeration order.
 """
 
-from conftest import rebuild_bytes
+from conftest import SRC, rebuild_bytes
+from mncs_index.bridge import Bridge
+from mncs_index.kernels import Kernels
 
 
 def test_worker_counts_converge(kernels, workdir):
@@ -27,6 +29,26 @@ def test_repeatability(kernels, workdir):
             kernels, corpus_dir, workers=4, seed=1, mncs_digest=False
         )
         assert snap.index_hash == first.index_hash
+
+
+def test_kernel_call_counts_reproducible(binary, workdir):
+    """Identical builds issue identical MNCS call counts at workers=8.
+
+    Producer memo reads take the kernel lock, so consumers cannot slip
+    a duplicate K_TOKVAL/K_TOKDIG submission past a torn read: PRESS-010
+    economics are reproducible under concurrency, not just convergent
+    in meaning. Fresh handles (cold caches) each run.
+    """
+    _, corpus_dir, _ = workdir
+    counts = []
+    for _ in range(2):
+        fresh = Kernels(Bridge(binary=binary, src_dir=SRC))
+        snap, _ = rebuild_bytes(
+            fresh, corpus_dir, workers=8, seed=7, mncs_digest=False
+        )
+        counts.append((snap.index_hash, fresh.b.stats.calls))
+    assert counts[0][0] == counts[1][0]
+    assert counts[0][1] == counts[1][1] > 0
 
 
 def test_seed_perturbation_converges(kernels, workdir):
