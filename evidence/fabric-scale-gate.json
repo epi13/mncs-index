@@ -1,0 +1,41 @@
+{
+  "gate": "slice-6 fabric/cross-machine distribution",
+  "verdict": "BLOCKED — do not distribute; no code added, no distribution faked",
+  "date": "2026-09-08",
+  "branch": "index/phase3-systems",
+  "criterion": "proceed with stable-partitions -> workers -> deterministic-merge-equal-to-local-hash plus retry/duplicate/reorder/loss tests ONLY if the slice-5 scale audit found practical infra",
+  "scale_audit": {
+    "source": "evidence/ecosystem-mncs-family.json + pressure/registry.md PRESS-010 update (slice 5)",
+    "hermetic": "6 files / 9868 B; workers 4 vs 1 converge to 98621db523005befd80a08ecaf11a8a83fb170c8c299814f6d5a4467c622f84b; cold w=4 1811 calls / 308.0 s wall",
+    "family": "18 files / 14166 B across 13 repos; workers 1 vs 2 converge to 2c901b0774f3a984f9f695dc719da226f6ab7f50e7d28aa90b6417d4043c2802; cold w=1 2502 calls / 1064.9 s, warm w=2 784 calls / 81.9 s",
+    "campaign_total": "5488 calls / 1466.4 s wall for 18 executed files",
+    "projection": "396.7 calls/KB -> census 554 files / 2074771 B projects ~803779 calls; census stays inventoried, not executed",
+    "contention": "on a loaded box workers=1 beat workers=4 wall-clock (103 s vs 308 s hermetic) — the per-call subprocess storm is the bottleneck and wider fan-out deepens it",
+    "reading": "local parallelism already anti-scales under load; shipping per-64-B-window kernel items over a network (still paying remote subprocess cost per item, plus serialization + retry overhead) cannot relieve a bottleneck caused by per-item process spawn. Gate criterion FAILED."
+  },
+  "missing_interfaces": [
+    {
+      "what": "partition/work-unit transport: no work-unit type, no remote endpoint, no capability/authority passing for remote workers",
+      "boundary": "runner/mncs_index/bridge.py call() is a synchronous local `mncs execute` subprocess driver (tempfile request -> subprocess.run -> JSON envelope); the only fabric mentions in-repo are future-boundary docs (docs/INTEGRATIONS.md mncs-fabric section, docs/ARCHITECTURE.md layer 7 'later', ROADMAP.md Phase 5 unchecked, SECURITY.md remote-execution capability-boundary requirement)"
+    },
+    {
+      "what": "deterministic distributed merge: no canonical wire format for partial partitions, no partition-hash-then-merge protocol",
+      "boundary": "merge is shared-memory only: indexer.results_to_records sorts in-process, extract.globalize dedups/sorts post-join in-process, kernels.tree_combine reduces over an in-process ThreadPoolExecutor on a shared Kernels object"
+    },
+    {
+      "what": "worker loss/retry/duplicate/reorder/loss semantics: none exist, so at-least-once delivery with deterministic merge is unimplementable",
+      "boundary": "pipeline failure model is fail-fast only (Pipeline._fail captures first error, broadcasts stop, drain protocol discards; missing leaf raises BuildFailed); no retry, no duplicate suppression, no reorder buffer, no partition quarantine anywhere in pipeline.py/indexer.py"
+    }
+  ],
+  "ordering_dependency": "PRESS-010 (in-process or batch kernel invocation) must land first: at ~10 ms idle / 200+ ms loaded per subprocess call (16k calls/MB at 64 B windows), per-item remote dispatch is uneconomical regardless of transport",
+  "reopen_when": [
+    "PRESS-010 batch/in-process API exists so per-item dispatch cost is bounded",
+    "a fabric work-unit transport with explicit capability boundaries exists (per docs/INTEGRATIONS.md contract)",
+    "partial-partition wire format + partition-hash-then-merge is specified and proven equal to the local hash",
+    "retry/duplicate/reorder/loss harness passes against worker-kill injection"
+  ],
+  "docs_updated": [
+    "ROADMAP.md Phase 5 (blocked note)",
+    "pressure/registry.md PRESS-019"
+  ]
+}

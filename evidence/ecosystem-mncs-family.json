@@ -1,0 +1,3430 @@
+{
+ "census": {
+  "bytes": 2074771,
+  "files": 554,
+  "note": "inventoried, not executed: priced beyond an in-session build under the PRESS-010 subprocess-per-call model; see economics.projection below"
+ },
+ "converged": true,
+ "corpus": "multi-repo ecosystem: mncs-index + locally available mncs-* repos",
+ "corpus_rule": "tier=family: up to max_files_per_repo=2 alphabetically-first **/*.mncs per repo (excluding .git/target/caches/build dirs and symlinks), each at most per_file_bytes=2048 bytes (0 = uncapped)",
+ "economics": {
+  "calls_per_file": 304.9,
+  "calls_per_kb": 396.7,
+  "mncs_calls": 5488,
+  "model": "one mncs execute subprocess per kernel call (bridge.stats.calls); pure-function memoization only",
+  "projection": {
+   "census_bytes": 2074771,
+   "census_files": 554,
+   "note": "linear projection of the measured calls/KB rate to census bytes; vocabulary caches make this an upper bound, subprocess contention makes wall time superlinear \u2014 the census stays inventoried, not executed",
+   "projected_calls": 803779
+  },
+  "wall_s": 1466.37
+ },
+ "excluded": [
+  {
+   "bytes": 639,
+   "path": "pressure/changeset-boundary.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 4072,
+   "path": "pressure/family-acceptance.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 1359,
+   "path": "pressure/family-boundary.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 4301,
+   "path": "pressure/family-graph-coherence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 4476,
+   "path": "pressure/promotion-boundary.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 3502,
+   "path": "pressure/rights-projection.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 1998,
+   "path": "pressure/semantic-conformance.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 378,
+   "path": "tests/fixtures/semantic-smoke-mutant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 421,
+   "path": "tests/fixtures/semantic-smoke.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 3828,
+   "path": "pressure/capability-resolution.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-actions"
+  },
+  {
+   "bytes": 2528,
+   "path": "mncs/atlas-json-projection.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-atlas"
+  },
+  {
+   "bytes": 675,
+   "path": "mncs/atlas-json-scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-atlas"
+  },
+  {
+   "bytes": 48026,
+   "path": "mncs/atlas-model.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-atlas"
+  },
+  {
+   "bytes": 4023,
+   "path": "mncs/scene_graph.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-atlas"
+  },
+  {
+   "bytes": 3102,
+   "path": "mncs/admission-model.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-atlas"
+  },
+  {
+   "bytes": 35784,
+   "path": "mncs/admission.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-atlas"
+  },
+  {
+   "bytes": 458,
+   "path": ".bootstrap/examples/source/abi-bool-sequences.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 433,
+   "path": ".bootstrap/examples/source/abi-mask-only.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1319,
+   "path": ".bootstrap/examples/source/abi-nested-composites.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 455,
+   "path": ".bootstrap/examples/source/abi-unsigned-records.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 4139,
+   "path": ".bootstrap/examples/source/abi-view-returns.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3782,
+   "path": ".bootstrap/examples/source/ansi-parser-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 430,
+   "path": ".bootstrap/examples/source/backend-conformance/conf/linked/evidence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 814,
+   "path": ".bootstrap/examples/source/backend-conformance/linked-root.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 358,
+   "path": ".bootstrap/examples/source/bounded-min.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 339,
+   "path": ".bootstrap/examples/source/clock-invalid-arity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 384,
+   "path": ".bootstrap/examples/source/clock-invalid-double.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 287,
+   "path": ".bootstrap/examples/source/clock-invalid-missing-decl.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1335,
+   "path": ".bootstrap/examples/source/clock-scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 570,
+   "path": ".bootstrap/examples/source/cre1-evidence-combine-wrong.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 708,
+   "path": ".bootstrap/examples/source/cre1-evidence-combine.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 293,
+   "path": ".bootstrap/examples/source/cre1-non-exhaustive.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 441,
+   "path": ".bootstrap/examples/source/cre2-authority-laundering.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 447,
+   "path": ".bootstrap/examples/source/cre2-authorized-call.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 280,
+   "path": ".bootstrap/examples/source/cre2-undeclared-capability.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1853,
+   "path": ".bootstrap/examples/source/cre3-retry-authority-wrong-bound.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1884,
+   "path": ".bootstrap/examples/source/cre3-retry-authority-wrong-unknown.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1938,
+   "path": ".bootstrap/examples/source/cre3-retry-authority.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 607,
+   "path": ".bootstrap/examples/source/crypto-invalid-arity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 717,
+   "path": ".bootstrap/examples/source/crypto-invalid-double.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 516,
+   "path": ".bootstrap/examples/source/crypto-invalid-missing-decl.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 581,
+   "path": ".bootstrap/examples/source/crypto-invalid-operand.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1023,
+   "path": ".bootstrap/examples/source/crypto-verify.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 338,
+   "path": ".bootstrap/examples/source/flagship.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1003,
+   "path": ".bootstrap/examples/source/generic-module-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 191,
+   "path": ".bootstrap/examples/source/generic-module-lib.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 97,
+   "path": ".bootstrap/examples/source/generic-negative-duplicate-param.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 110,
+   "path": ".bootstrap/examples/source/generic-negative-higher-kinded.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 164,
+   "path": ".bootstrap/examples/source/generic-negative-missing-args.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 207,
+   "path": ".bootstrap/examples/source/generic-negative-non-constant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 163,
+   "path": ".bootstrap/examples/source/generic-negative-recursive.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 201,
+   "path": ".bootstrap/examples/source/generic-negative-wrong-kind.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1223,
+   "path": ".bootstrap/examples/source/generic-nested-iteration.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2749,
+   "path": ".bootstrap/examples/source/generic-polymorphism.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 373,
+   "path": ".bootstrap/examples/source/host-read-invalid-arity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 416,
+   "path": ".bootstrap/examples/source/host-read-invalid-double.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 316,
+   "path": ".bootstrap/examples/source/host-read-invalid-missing-decl.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 923,
+   "path": ".bootstrap/examples/source/host-read-scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 149,
+   "path": ".bootstrap/examples/source/identity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 497,
+   "path": ".bootstrap/examples/source/imports/evidence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 551,
+   "path": ".bootstrap/examples/source/imports/study.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 544,
+   "path": ".bootstrap/examples/source/json-cursor-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 698,
+   "path": ".bootstrap/examples/source/json-emit-roundtrip.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 438,
+   "path": ".bootstrap/examples/source/json-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 481,
+   "path": ".bootstrap/examples/source/json-projection-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 376,
+   "path": ".bootstrap/examples/source/json-stream-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 326,
+   "path": ".bootstrap/examples/source/library-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 681,
+   "path": ".bootstrap/examples/source/library-core-status-wrong.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 180,
+   "path": ".bootstrap/examples/source/profile03-recursive-call.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 409,
+   "path": ".bootstrap/examples/source/profile04-authority-laundering.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 213,
+   "path": ".bootstrap/examples/source/profile04-invalid-bound-too-large.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 211,
+   "path": ".bootstrap/examples/source/profile04-invalid-bound-zero.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 205,
+   "path": ".bootstrap/examples/source/profile04-invalid-carried-state.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 233,
+   "path": ".bootstrap/examples/source/profile04-invalid-nonliteral-bound.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 125,
+   "path": ".bootstrap/examples/source/profile04-recursive-retry.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 134,
+   "path": ".bootstrap/examples/source/profile04-unbounded-while.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1620,
+   "path": ".bootstrap/examples/source/profile05-branch-on-names.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 828,
+   "path": ".bootstrap/examples/source/profile05-interleaved-declarations.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 210,
+   "path": ".bootstrap/examples/source/profile05-invalid-duplicate-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 277,
+   "path": ".bootstrap/examples/source/profile05-invalid-literal-unknown-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 584,
+   "path": ".bootstrap/examples/source/profile05-record-values.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 206,
+   "path": ".bootstrap/examples/source/profile05-records-in-profile04.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 535,
+   "path": ".bootstrap/examples/source/profile06-bool-match.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 557,
+   "path": ".bootstrap/examples/source/profile06-boolean-operators.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 660,
+   "path": ".bootstrap/examples/source/profile06-capability-identifier.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 872,
+   "path": ".bootstrap/examples/source/profile06-explicit-intents.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 269,
+   "path": ".bootstrap/examples/source/profile06-invalid-bool-match-duplicate.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 298,
+   "path": ".bootstrap/examples/source/profile06-invalid-bool-match-missing.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 288,
+   "path": ".bootstrap/examples/source/profile06-invalid-bool-match-unknown.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 410,
+   "path": ".bootstrap/examples/source/profile06-invalid-iteration-bound.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 321,
+   "path": ".bootstrap/examples/source/profile06-invalid-match-missing-comma.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 394,
+   "path": ".bootstrap/examples/source/profile06-invalid-payload-construction-omits-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 415,
+   "path": ".bootstrap/examples/source/profile06-invalid-payload-match-missing.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 436,
+   "path": ".bootstrap/examples/source/profile06-invalid-payload-pattern-unknown-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 411,
+   "path": ".bootstrap/examples/source/profile06-invalid-payload-type-mismatch.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1117,
+   "path": ".bootstrap/examples/source/profile06-payload-sums.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 700,
+   "path": ".bootstrap/examples/source/profile06-random-split.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 96,
+   "path": ".bootstrap/examples/source/profile06-unsigned-division.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2096,
+   "path": ".bootstrap/examples/source/profile07-bounded-data.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2871,
+   "path": ".bootstrap/examples/source/profile07-serialization.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 262,
+   "path": ".bootstrap/examples/source/profile07/invalid-byte-arithmetic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 237,
+   "path": ".bootstrap/examples/source/profile07/invalid-overfilled-literal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 246,
+   "path": ".bootstrap/examples/source/profile07/invalid-sequence-type-in-06.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 257,
+   "path": ".bootstrap/examples/source/profile07/invalid-static-index-out-of-range.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 283,
+   "path": ".bootstrap/examples/source/profile07/invalid-underfilled-literal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 435,
+   "path": ".bootstrap/examples/source/profile07/invalid-view-range-inverted.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 699,
+   "path": ".bootstrap/examples/source/profile08-branchless.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 328,
+   "path": ".bootstrap/examples/source/profile08-numeric-boundary.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2571,
+   "path": ".bootstrap/examples/source/profile08-vectors.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 175,
+   "path": ".bootstrap/examples/source/profile08/invalid-lane-out-of-range.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 476,
+   "path": ".bootstrap/examples/source/profile08/invalid-mask-lane-mismatch.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 286,
+   "path": ".bootstrap/examples/source/profile08/invalid-mask-sequence-element.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 276,
+   "path": ".bootstrap/examples/source/profile08/invalid-vector-lane-mismatch.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 183,
+   "path": ".bootstrap/examples/source/profile08/invalid-vector-type-in-07.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 400,
+   "path": ".bootstrap/examples/source/profile09-stdlib-namespace-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 216,
+   "path": ".bootstrap/examples/source/profile11/counted-index-on-010.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 372,
+   "path": ".bootstrap/examples/source/profile11/nested-depth-three.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 278,
+   "path": ".bootstrap/examples/source/profile11/nested-on-010.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 532,
+   "path": ".bootstrap/examples/source/proof-demo-no-overflow.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1535,
+   "path": ".bootstrap/examples/source/semantic/arithmetic_contracts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 953,
+   "path": ".bootstrap/examples/source/semantic/arithmetic_contracts_mutant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 785,
+   "path": ".bootstrap/examples/source/semantic/image_mutant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1521,
+   "path": ".bootstrap/examples/source/semantic/vision_mutant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3545,
+   "path": ".bootstrap/examples/source/stage-b1-bitwise-shifts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1319,
+   "path": ".bootstrap/examples/source/stage-b3-nested-iteration.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3043,
+   "path": ".bootstrap/examples/source/stage-c1-float-arithmetic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 711,
+   "path": ".bootstrap/examples/source/status-generic-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1367,
+   "path": ".bootstrap/examples/source/subtype-windows.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 202,
+   "path": ".bootstrap/examples/source/test/generic/lib.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1802,
+   "path": ".bootstrap/examples/source/test/nominal/consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1145,
+   "path": ".bootstrap/examples/source/test/nominal/machine.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1304,
+   "path": ".bootstrap/examples/syntax/minimal/account-transfer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2063,
+   "path": ".bootstrap/examples/syntax/structured/account-transfer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1304,
+   "path": ".bootstrap/examples/syntax/zig-like/account-transfer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 431,
+   "path": ".bootstrap/library/core/bounds.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3616,
+   "path": ".bootstrap/library/core/bytes.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3256,
+   "path": ".bootstrap/library/core/contracts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 15581,
+   "path": ".bootstrap/library/core/geometry.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2347,
+   "path": ".bootstrap/library/core/identity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 12277,
+   "path": ".bootstrap/library/core/image.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1057,
+   "path": ".bootstrap/library/core/lineage.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1198,
+   "path": ".bootstrap/library/core/logic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2011,
+   "path": ".bootstrap/library/core/mask.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2541,
+   "path": ".bootstrap/library/core/numeric.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1628,
+   "path": ".bootstrap/library/core/ordering.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 8477,
+   "path": ".bootstrap/library/core/partition.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 10717,
+   "path": ".bootstrap/library/core/proof_admit.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 29256,
+   "path": ".bootstrap/library/core/proof_check.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 124289,
+   "path": ".bootstrap/library/core/proof_dep.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1965,
+   "path": ".bootstrap/library/core/proof_term.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3654,
+   "path": ".bootstrap/library/core/random.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1639,
+   "path": ".bootstrap/library/core/result.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 9039,
+   "path": ".bootstrap/library/core/sequences.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 6407,
+   "path": ".bootstrap/library/core/status.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2071,
+   "path": ".bootstrap/library/core/vector.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3318,
+   "path": ".bootstrap/library/core/version.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 22794,
+   "path": ".bootstrap/library/core/vision.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 10166,
+   "path": ".bootstrap/library/family/coherence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 10697,
+   "path": ".bootstrap/library/family/journal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3944,
+   "path": ".bootstrap/library/family/rfc_status.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 8670,
+   "path": ".bootstrap/library/std/ansi.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1507,
+   "path": ".bootstrap/library/std/clock.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 6757,
+   "path": ".bootstrap/library/std/encoding.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3883,
+   "path": ".bootstrap/library/std/fixed.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 11861,
+   "path": ".bootstrap/library/std/json.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 11395,
+   "path": ".bootstrap/library/std/json_cursor.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 11213,
+   "path": ".bootstrap/library/std/json_emit.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 5767,
+   "path": ".bootstrap/library/std/json_projection.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 5840,
+   "path": ".bootstrap/library/std/json_stream.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 11857,
+   "path": ".bootstrap/library/std/platform.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 688,
+   "path": ".bootstrap/library/std/simd.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 6547,
+   "path": ".bootstrap/library/std/task.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1986,
+   "path": ".bootstrap/library/std/text_map.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 8344,
+   "path": ".bootstrap/library/std/text_scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2400,
+   "path": ".bootstrap/library/std/text_view.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 105,
+   "path": "pressure/repro/bool-equality.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 91,
+   "path": "pressure/repro/leading-comment-envelope.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 109,
+   "path": "pressure/repro/source-65.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 146,
+   "path": "pressure/repro/unbounded-scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3557,
+   "path": "src/compiler/kernel.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 13897,
+   "path": "src/compiler/lexer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 2832,
+   "path": "src/compiler/parser.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 679,
+   "path": "src/compiler/source.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 162,
+   "path": "tests/fixtures/token-sequence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 3049,
+   "path": ".bootstrap/examples/consumers/ravel-core-snapshot.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-compiler"
+  },
+  {
+   "bytes": 1423,
+   "path": "examples/fountain.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 673,
+   "path": "language/mncs/engine/foundation/probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 3524,
+   "path": "language/mncs/engine/image/bridge.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 5846,
+   "path": "language/mncs/engine/image/color.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 7569,
+   "path": "language/mncs/engine/image/framebuffer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 3998,
+   "path": "language/mncs/engine/image/generic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 5079,
+   "path": "language/mncs/engine/image/large.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 4889,
+   "path": "language/mncs/engine/math/geometry.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 3879,
+   "path": "language/mncs/engine/math/mat4.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 4797,
+   "path": "language/mncs/engine/math/quat.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 10818,
+   "path": "language/mncs/engine/math/scalar.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 5423,
+   "path": "language/mncs/engine/math/transform.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 4414,
+   "path": "language/mncs/engine/math/vec2.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 4632,
+   "path": "language/mncs/engine/math/vec3.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 3716,
+   "path": "language/mncs/engine/math/vec4.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 25036,
+   "path": "language/mncs/engine/raster/rasterizer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 10802,
+   "path": "language/mncs/engine/render/draw2d.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 4408,
+   "path": "language/mncs/engine/render/ppm.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 6544,
+   "path": "language/mncs/engine/scene/camera.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 4039,
+   "path": "language/mncs/engine/scene/mesh.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 15029,
+   "path": "language/mncs/engine/scene/scene.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 6467,
+   "path": "language/mncs/engine/simulation/boids.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 8336,
+   "path": "language/mncs/engine/simulation/collision.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 4759,
+   "path": "language/mncs/engine/simulation/fields.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 5974,
+   "path": "language/mncs/engine/simulation/particles.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 389,
+   "path": "language/mncs/pressure/bitops.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 1085,
+   "path": "language/mncs/pressure/clip_guard.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 471,
+   "path": "language/mncs/pressure/div_oblig.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 915,
+   "path": "language/mncs/pressure/enum_payload.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 709,
+   "path": "language/mncs/pressure/fixed_point.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 699,
+   "path": "language/mncs/pressure/fixed_pool.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 699,
+   "path": "language/mncs/pressure/hash_stream.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 356,
+   "path": "language/mncs/pressure/isqrt_max.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 733,
+   "path": "language/mncs/pressure/lit_suffix.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 929,
+   "path": "language/mncs/pressure/neighborhood.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 684,
+   "path": "language/mncs/pressure/nested_seq.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 2277,
+   "path": "language/mncs/pressure/pins.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 311,
+   "path": "language/mncs/pressure/rejected/n0004.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 248,
+   "path": "language/mncs/pressure/rejected/n0005.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 428,
+   "path": "language/mncs/pressure/rejected/n0007.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 380,
+   "path": "language/mncs/pressure/rejected/n0007b.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 120,
+   "path": "language/mncs/pressure/rejected/n0007lib.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 361,
+   "path": "language/mncs/pressure/rejected/n0010.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 391,
+   "path": "language/mncs/pressure/rejected/n0011a.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 379,
+   "path": "language/mncs/pressure/rejected/n0011b.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 333,
+   "path": "language/mncs/pressure/rejected/n0011lib.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 320,
+   "path": "language/mncs/pressure/rejected/n0018.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 339,
+   "path": "language/mncs/pressure/rejected/n0019.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 288,
+   "path": "language/mncs/pressure/rejected/n0020.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 310,
+   "path": "language/mncs/pressure/rejected/n0021.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 439,
+   "path": "language/mncs/pressure/seq_domain.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 2566,
+   "path": "language/mncs/pressure/shapes_fill.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 438,
+   "path": "language/mncs/pressure/shr_i64.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 452,
+   "path": "language/mncs/pressure/shr_u64.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 521,
+   "path": "language/mncs/pressure/up_to32.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-engine"
+  },
+  {
+   "bytes": 2842,
+   "path": "mncs/fabric_lifecycle_status.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 5915,
+   "path": "mncs/fabric_management.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 9134,
+   "path": "mncs/fabric_reconnect.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 4807,
+   "path": "mncs/fabric_rollout_outcome.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 2778,
+   "path": "mncs/fabric_scheduler_rank.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 3040,
+   "path": "mncs/fabric_work_item.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 14006,
+   "path": "mncs/update_lifecycle.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 7238,
+   "path": "mncs/worker_capability.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 2069,
+   "path": "mncs/fabric_availability.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-fabric"
+  },
+  {
+   "bytes": 675,
+   "path": "src/mncs_forge/resources/native/forge/identity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 22564,
+   "path": "src/mncs_forge/resources/native/forge/lifecycle.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 10641,
+   "path": "src/mncs_forge/resources/native/forge/readiness.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 5283,
+   "path": "src/mncs_forge/resources/native/forge/reconciliation.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 2780,
+   "path": "src/mncs_forge/resources/native/forge/records.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 2478,
+   "path": "src/mncs_forge/resources/native/forge/serialization.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 3934,
+   "path": "src/mncs_forge/resources/native/forge/bundle.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 4487,
+   "path": "src/mncs_forge/resources/native/forge/core.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-forge-mcp"
+  },
+  {
+   "bytes": 467,
+   "path": "development-evidence/language-pressure/HARNESS-PRESSURE-003/repro.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 157,
+   "path": "development-evidence/language-pressure/HARNESS-PRESSURE-008/repro.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 147,
+   "path": "development-evidence/language-pressure/HARNESS-PRESSURE-013/repro.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 221,
+   "path": "development-evidence/language-pressure/HARNESS-PRESSURE-014/repro.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 2789,
+   "path": "mncs/harness_atlas.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 6099,
+   "path": "mncs/harness_eligibility.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 1842,
+   "path": "mncs/harness_fabric.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 1544,
+   "path": "mncs/harness_freshness.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 4227,
+   "path": "mncs/harness_pins.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 3552,
+   "path": "mncs/harness_policy.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 2523,
+   "path": "mncs/harness_readiness.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 2086,
+   "path": "mncs/harness_routing.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 2924,
+   "path": "mncs/harness_verdict.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-harness"
+  },
+  {
+   "bytes": 663,
+   "path": "pressure/reproducers/probe-clock.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 639,
+   "path": "pressure/reproducers/probe-host-read.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 664,
+   "path": "pressure/reproducers/probe-sha256-abc.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 1239,
+   "path": "pressure/reproducers/probe-task-lifecycle.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 615,
+   "path": "pressure/reproducers/traversal-u64-domain.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 3275,
+   "path": "src/digest.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 6592,
+   "path": "src/extract.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 1574,
+   "path": "src/graph.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 2755,
+   "path": "src/kind.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 4668,
+   "path": "src/order.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 3335,
+   "path": "src/scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 102,
+   "path": "tests/fixtures/corpus/a.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 78,
+   "path": "tests/fixtures/corpus/sub/g.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-index"
+  },
+  {
+   "bytes": 458,
+   "path": "examples/source/abi-bool-sequences.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 433,
+   "path": "examples/source/abi-mask-only.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1319,
+   "path": "examples/source/abi-nested-composites.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 455,
+   "path": "examples/source/abi-unsigned-records.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 4139,
+   "path": "examples/source/abi-view-returns.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3782,
+   "path": "examples/source/ansi-parser-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 430,
+   "path": "examples/source/backend-conformance/conf/linked/evidence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 814,
+   "path": "examples/source/backend-conformance/linked-root.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 358,
+   "path": "examples/source/bounded-min.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 339,
+   "path": "examples/source/clock-invalid-arity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 384,
+   "path": "examples/source/clock-invalid-double.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 287,
+   "path": "examples/source/clock-invalid-missing-decl.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1335,
+   "path": "examples/source/clock-scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 570,
+   "path": "examples/source/cre1-evidence-combine-wrong.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 708,
+   "path": "examples/source/cre1-evidence-combine.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 293,
+   "path": "examples/source/cre1-non-exhaustive.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 441,
+   "path": "examples/source/cre2-authority-laundering.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 447,
+   "path": "examples/source/cre2-authorized-call.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 280,
+   "path": "examples/source/cre2-undeclared-capability.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1853,
+   "path": "examples/source/cre3-retry-authority-wrong-bound.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1884,
+   "path": "examples/source/cre3-retry-authority-wrong-unknown.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1938,
+   "path": "examples/source/cre3-retry-authority.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 607,
+   "path": "examples/source/crypto-invalid-arity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 717,
+   "path": "examples/source/crypto-invalid-double.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 516,
+   "path": "examples/source/crypto-invalid-missing-decl.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 581,
+   "path": "examples/source/crypto-invalid-operand.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1023,
+   "path": "examples/source/crypto-verify.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 338,
+   "path": "examples/source/flagship.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1003,
+   "path": "examples/source/generic-module-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 191,
+   "path": "examples/source/generic-module-lib.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 97,
+   "path": "examples/source/generic-negative-duplicate-param.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 110,
+   "path": "examples/source/generic-negative-higher-kinded.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 164,
+   "path": "examples/source/generic-negative-missing-args.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 207,
+   "path": "examples/source/generic-negative-non-constant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 163,
+   "path": "examples/source/generic-negative-recursive.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 201,
+   "path": "examples/source/generic-negative-wrong-kind.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1223,
+   "path": "examples/source/generic-nested-iteration.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2749,
+   "path": "examples/source/generic-polymorphism.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 373,
+   "path": "examples/source/host-read-invalid-arity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 416,
+   "path": "examples/source/host-read-invalid-double.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 316,
+   "path": "examples/source/host-read-invalid-missing-decl.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 923,
+   "path": "examples/source/host-read-scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 149,
+   "path": "examples/source/identity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 497,
+   "path": "examples/source/imports/evidence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 551,
+   "path": "examples/source/imports/study.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 544,
+   "path": "examples/source/json-cursor-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 698,
+   "path": "examples/source/json-emit-roundtrip.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 438,
+   "path": "examples/source/json-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 481,
+   "path": "examples/source/json-projection-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 376,
+   "path": "examples/source/json-stream-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 326,
+   "path": "examples/source/library-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 681,
+   "path": "examples/source/library-core-status-wrong.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 180,
+   "path": "examples/source/profile03-recursive-call.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 409,
+   "path": "examples/source/profile04-authority-laundering.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 213,
+   "path": "examples/source/profile04-invalid-bound-too-large.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 211,
+   "path": "examples/source/profile04-invalid-bound-zero.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 205,
+   "path": "examples/source/profile04-invalid-carried-state.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 233,
+   "path": "examples/source/profile04-invalid-nonliteral-bound.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 125,
+   "path": "examples/source/profile04-recursive-retry.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 134,
+   "path": "examples/source/profile04-unbounded-while.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1620,
+   "path": "examples/source/profile05-branch-on-names.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 828,
+   "path": "examples/source/profile05-interleaved-declarations.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 210,
+   "path": "examples/source/profile05-invalid-duplicate-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 277,
+   "path": "examples/source/profile05-invalid-literal-unknown-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 584,
+   "path": "examples/source/profile05-record-values.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 206,
+   "path": "examples/source/profile05-records-in-profile04.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 535,
+   "path": "examples/source/profile06-bool-match.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 557,
+   "path": "examples/source/profile06-boolean-operators.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 660,
+   "path": "examples/source/profile06-capability-identifier.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 872,
+   "path": "examples/source/profile06-explicit-intents.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 269,
+   "path": "examples/source/profile06-invalid-bool-match-duplicate.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 298,
+   "path": "examples/source/profile06-invalid-bool-match-missing.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 288,
+   "path": "examples/source/profile06-invalid-bool-match-unknown.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 410,
+   "path": "examples/source/profile06-invalid-iteration-bound.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 321,
+   "path": "examples/source/profile06-invalid-match-missing-comma.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 394,
+   "path": "examples/source/profile06-invalid-payload-construction-omits-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 415,
+   "path": "examples/source/profile06-invalid-payload-match-missing.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 436,
+   "path": "examples/source/profile06-invalid-payload-pattern-unknown-field.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 411,
+   "path": "examples/source/profile06-invalid-payload-type-mismatch.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1117,
+   "path": "examples/source/profile06-payload-sums.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 700,
+   "path": "examples/source/profile06-random-split.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 96,
+   "path": "examples/source/profile06-unsigned-division.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2096,
+   "path": "examples/source/profile07-bounded-data.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2871,
+   "path": "examples/source/profile07-serialization.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 262,
+   "path": "examples/source/profile07/invalid-byte-arithmetic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 237,
+   "path": "examples/source/profile07/invalid-overfilled-literal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 246,
+   "path": "examples/source/profile07/invalid-sequence-type-in-06.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 257,
+   "path": "examples/source/profile07/invalid-static-index-out-of-range.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 283,
+   "path": "examples/source/profile07/invalid-underfilled-literal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 435,
+   "path": "examples/source/profile07/invalid-view-range-inverted.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 699,
+   "path": "examples/source/profile08-branchless.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 328,
+   "path": "examples/source/profile08-numeric-boundary.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2571,
+   "path": "examples/source/profile08-vectors.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 175,
+   "path": "examples/source/profile08/invalid-lane-out-of-range.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 476,
+   "path": "examples/source/profile08/invalid-mask-lane-mismatch.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 286,
+   "path": "examples/source/profile08/invalid-mask-sequence-element.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 276,
+   "path": "examples/source/profile08/invalid-vector-lane-mismatch.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 183,
+   "path": "examples/source/profile08/invalid-vector-type-in-07.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 400,
+   "path": "examples/source/profile09-stdlib-namespace-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 216,
+   "path": "examples/source/profile11/counted-index-on-010.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 372,
+   "path": "examples/source/profile11/nested-depth-three.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 278,
+   "path": "examples/source/profile11/nested-on-010.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 532,
+   "path": "examples/source/proof-demo-no-overflow.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1535,
+   "path": "examples/source/semantic/arithmetic_contracts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 953,
+   "path": "examples/source/semantic/arithmetic_contracts_mutant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 785,
+   "path": "examples/source/semantic/image_mutant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1521,
+   "path": "examples/source/semantic/vision_mutant.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3545,
+   "path": "examples/source/stage-b1-bitwise-shifts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1319,
+   "path": "examples/source/stage-b3-nested-iteration.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3043,
+   "path": "examples/source/stage-c1-float-arithmetic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1068,
+   "path": "examples/source/stage-c2-trig.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 711,
+   "path": "examples/source/status-generic-consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1367,
+   "path": "examples/source/subtype-windows.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 202,
+   "path": "examples/source/test/generic/lib.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1802,
+   "path": "examples/source/test/nominal/consumer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1145,
+   "path": "examples/source/test/nominal/machine.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 185,
+   "path": "examples/source/trig-invalid-arity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 194,
+   "path": "examples/source/trig-invalid-profile.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1304,
+   "path": "examples/syntax/minimal/account-transfer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2063,
+   "path": "examples/syntax/structured/account-transfer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1304,
+   "path": "examples/syntax/zig-like/account-transfer.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 431,
+   "path": "library/core/bounds.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3616,
+   "path": "library/core/bytes.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3256,
+   "path": "library/core/contracts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 15581,
+   "path": "library/core/geometry.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2347,
+   "path": "library/core/identity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 12277,
+   "path": "library/core/image.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1057,
+   "path": "library/core/lineage.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1198,
+   "path": "library/core/logic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2011,
+   "path": "library/core/mask.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2541,
+   "path": "library/core/numeric.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1628,
+   "path": "library/core/ordering.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 8477,
+   "path": "library/core/partition.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 10717,
+   "path": "library/core/proof_admit.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 29256,
+   "path": "library/core/proof_check.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 124289,
+   "path": "library/core/proof_dep.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1965,
+   "path": "library/core/proof_term.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3654,
+   "path": "library/core/random.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1639,
+   "path": "library/core/result.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 9039,
+   "path": "library/core/sequences.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 6407,
+   "path": "library/core/status.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2071,
+   "path": "library/core/vector.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3318,
+   "path": "library/core/version.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 22794,
+   "path": "library/core/vision.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 10166,
+   "path": "library/family/coherence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 10697,
+   "path": "library/family/journal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3944,
+   "path": "library/family/rfc_status.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 8670,
+   "path": "library/std/ansi.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1507,
+   "path": "library/std/clock.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 6757,
+   "path": "library/std/encoding.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3883,
+   "path": "library/std/fixed.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 11861,
+   "path": "library/std/json.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 11395,
+   "path": "library/std/json_cursor.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 11213,
+   "path": "library/std/json_emit.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 5767,
+   "path": "library/std/json_projection.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 5840,
+   "path": "library/std/json_stream.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 11857,
+   "path": "library/std/platform.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 688,
+   "path": "library/std/simd.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 6547,
+   "path": "library/std/task.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1986,
+   "path": "library/std/text_map.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 8344,
+   "path": "library/std/text_scan.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 2400,
+   "path": "library/std/text_view.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 3049,
+   "path": "examples/consumers/ravel-core-snapshot.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-language"
+  },
+  {
+   "bytes": 1938,
+   "path": "integration/github-linguist/samples/cre3-retry-authority.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 338,
+   "path": "integration/github-linguist/samples/flagship.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 584,
+   "path": "integration/github-linguist/samples/profile05-record-values.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 2584,
+   "path": "integration/github-linguist/samples/ravel-core.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 7564,
+   "path": "integration/github-linguist/samples/synthetic-lineage-g0.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 363,
+   "path": "mncs/status_query.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 229,
+   "path": "tests/fixtures/bounded-iteration.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 313,
+   "path": "tests/fixtures/finite-match.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 266,
+   "path": "tests/fixtures/imports/evidence.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 152,
+   "path": "tests/fixtures/imports/study.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 937,
+   "path": "tests/fixtures/lineage/g0-proposer-self-certification.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 7564,
+   "path": "tests/fixtures/lineage/synthetic-lineage-g0.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 340,
+   "path": "tests/fixtures/native-forge-service.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 257,
+   "path": "tests/fixtures/records.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 149,
+   "path": "tests/fixtures/semantic-error.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 98,
+   "path": "tests/fixtures/syntax-error.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 198,
+   "path": "tests/fixtures/unicode.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 361,
+   "path": "tests/fixtures/valid-contracts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 2537,
+   "path": "integration/github-linguist/samples/core-status.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-language-service"
+  },
+  {
+   "bytes": 2439,
+   "path": "language/specialist-lineage.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-lineage"
+  },
+  {
+   "bytes": 7564,
+   "path": "language/synthetic-lineage-g0.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-lineage"
+  },
+  {
+   "bytes": 5381,
+   "path": "language/variants/g0-rollback-holds-on-missing-artifact.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-lineage"
+  },
+  {
+   "bytes": 6017,
+   "path": "language/lineage-core.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-lineage"
+  },
+  {
+   "bytes": 163,
+   "path": "repro/array-enum-payload-rejected/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 132,
+   "path": "repro/generic-enum-rejected/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 119,
+   "path": "repro/generic-record-rejected/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 88,
+   "path": "repro/native-c11-symbol-collision/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 444,
+   "path": "repro/native-c11-u64-widening/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 104,
+   "path": "repro/native-min-mod-neg1/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 503,
+   "path": "repro/nested-calls-supported/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 257,
+   "path": "repro/nested-record-supported/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 355,
+   "path": "repro/next-state-call-rejected/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 95,
+   "path": "repro/operator-over-type-param-rejected/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 469,
+   "path": "repro/u64-domain-record-carry/case.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 20383,
+   "path": "src/math/autodiff.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 26709,
+   "path": "src/math/bigint.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 20087,
+   "path": "src/math/complex.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 5214,
+   "path": "src/math/deterministic.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 3198,
+   "path": "src/math/error.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 18391,
+   "path": "src/math/fixed.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 3954,
+   "path": "src/math/float.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 1713,
+   "path": "src/math/internal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 6366,
+   "path": "src/math/interval.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 50256,
+   "path": "src/math/linalg.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 19097,
+   "path": "src/math/linalg5.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 12898,
+   "path": "src/math/matrix.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 5687,
+   "path": "src/math/modular.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 7336,
+   "path": "src/math/ntt.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 14706,
+   "path": "src/math/numerical.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 5933,
+   "path": "src/math/optimize.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 7672,
+   "path": "src/math/poly.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 13260,
+   "path": "src/math/rational.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 16813,
+   "path": "src/math/scalar.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 6308,
+   "path": "src/math/sparse.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 7146,
+   "path": "src/math/statistics.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 14305,
+   "path": "src/math/tensor.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 11347,
+   "path": "src/math/vector.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 3952,
+   "path": "examples/ex_solve.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-math"
+  },
+  {
+   "bytes": 637,
+   "path": "language/mncs/memory/escalation.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-memory"
+  },
+  {
+   "bytes": 1382,
+   "path": "language/mncs/memory/policy.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-memory"
+  },
+  {
+   "bytes": 815,
+   "path": "language/mncs/memory/query.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-memory"
+  },
+  {
+   "bytes": 12062,
+   "path": "language/rights_policy.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-rights-provenance"
+  },
+  {
+   "bytes": 2382,
+   "path": "language/check_projection.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-rights-provenance"
+  },
+  {
+   "bytes": 3887,
+   "path": "language/pressure_provenance.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-rights-provenance"
+  },
+  {
+   "bytes": 8794,
+   "path": "src/store/identity.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 8620,
+   "path": "src/store/manifest.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 2875,
+   "path": "src/store/read_verify.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 893,
+   "path": "tests/fixtures/checked_arith_canary.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 1355,
+   "path": "tests/fixtures/effects_probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 404,
+   "path": "tests/fixtures/type_confusion.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 15211,
+   "path": "src/store/chunk.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 7888,
+   "path": "src/store/descriptor.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-store"
+  },
+  {
+   "bytes": 595,
+   "path": "examples/first-layout.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 12223,
+   "path": "examples/focused-tests.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 5707,
+   "path": "examples/full-demo.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 2352,
+   "path": "examples/interaction-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 2106,
+   "path": "examples/render-probe.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 2376,
+   "path": "src/charts.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 9820,
+   "path": "src/events.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 6770,
+   "path": "src/focus.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 6039,
+   "path": "src/geometry.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 13979,
+   "path": "src/layout.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 7683,
+   "path": "src/render.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 10551,
+   "path": "src/terminal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 10252,
+   "path": "src/widgets.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-tui"
+  },
+  {
+   "bytes": 112,
+   "path": "fixtures/interoperability/fixtures/packages/symlink.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-validator-rs"
+  },
+  {
+   "bytes": 119,
+   "path": "fixtures/interoperability/fixtures/packages/traversal.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-validator-rs"
+  },
+  {
+   "bytes": 15715,
+   "path": "fixtures/interoperability/fixtures/packages/valid.mncs",
+   "reason": "beyond max_files_per_repo",
+   "repo": "mncs-validator-rs"
+  },
+  {
+   "bytes": 65348,
+   "path": "fixtures/interoperability/fixtures/packages/oversized.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-validator-rs"
+  },
+  {
+   "bytes": 15715,
+   "path": "fixtures/interoperability/fixtures/packages/reproducible-copy.mncs",
+   "reason": "beyond per_file_bytes",
+   "repo": "mncs-validator-rs"
+  }
+ ],
+ "max_in_flight": 2,
+ "mncs_calls": 5904,
+ "mncs_language": {
+  "actual_head": "6a29332bd56f9ce27c82871d7655dadf984ae4d1",
+  "binary": "/home/epi13/Documents/Projects/mncs-language/target/debug/mncs",
+  "head_matches_lock": false,
+  "locked_revision": "0eeafdd6116158dde6529c148ae74a362990325a",
+  "worktree_dirty": false
+ },
+ "mutation": {
+  "batch": {
+   "added": [
+    "scale/app.mncs",
+    "scale/dep.mncs"
+   ],
+   "changed": "mncs-actions/pressure/artifact-envelope-boundary.mncs",
+   "removed": "mncs-fabric/development-pressure/reproducers/text_arch_probe.mncs",
+   "renamed": [
+    "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs",
+    "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs.renamed.mncs"
+   ],
+   "rfc_press": "scale/notes.md"
+  },
+  "expected_verdicts": {
+   "mncs-actions/pressure/artifact-envelope-boundary.mncs": 3,
+   "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs": 2,
+   "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs.renamed.mncs": 1,
+   "mncs-fabric/development-pressure/reproducers/text_arch_probe.mncs": 2,
+   "scale/app.mncs": 1,
+   "scale/dep.mncs": 1,
+   "scale/notes.md": 1
+  },
+  "gen0": {
+   "mncs_calls": 784,
+   "wall_s": 82.21
+  },
+  "incremental": {
+   "mncs_calls": 705,
+   "wall_s": 94.88
+  },
+  "invalidation_roots": [
+   "mncs-actions/pressure/artifact-envelope-boundary.mncs",
+   "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs",
+   "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs.renamed.mncs",
+   "mncs-fabric/development-pressure/reproducers/text_arch_probe.mncs",
+   "scale/app.mncs",
+   "scale/dep.mncs",
+   "scale/notes.md",
+   "mncs-engine/benches/pool.mncs",
+   "mncs-engine/examples/flock.mncs",
+   "mncs-math/examples/ex_sample.mncs"
+  ],
+  "rebuild": {
+   "mncs_calls": 713,
+   "wall_s": 142.43
+  },
+  "rows": {
+   "docs": 20,
+   "headings": 1,
+   "press": 3,
+   "rels": 115,
+   "syms": 90,
+   "terms": 903
+  },
+  "verdicts": {
+   "mncs-actions/pressure/artifact-envelope-boundary.mncs": 3,
+   "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs": 2,
+   "mncs-compiler/.bootstrap/examples/execution/backend-conformance/div-probe.mncs.renamed.mncs": 1,
+   "mncs-engine/benches/pool.mncs": 0,
+   "mncs-engine/examples/flock.mncs": 0,
+   "mncs-fabric/development-pressure/reproducers/text_arch_probe.mncs": 2,
+   "mncs-harness/development-evidence/language-pressure/HARNESS-PRESSURE-001/repro.mncs": 0,
+   "mncs-harness/development-evidence/language-pressure/HARNESS-PRESSURE-002/repro.mncs": 0,
+   "mncs-index/pressure/reproducers/int-bitwise-xor.mncs": 0,
+   "mncs-index/pressure/reproducers/nested-iterate.mncs": 0,
+   "mncs-language-service/integration/github-linguist/samples/core-ordering.mncs": 0,
+   "mncs-language/examples/execution/backend-conformance/div-probe.mncs": 0,
+   "mncs-lineage/language/negative/g0-proposer-self-certification.mncs": 0,
+   "mncs-math/examples/ex_sample.mncs": 0,
+   "mncs-memory/language/mncs/memory/budget.mncs": 0,
+   "mncs-memory/language/mncs/memory/core.mncs": 0,
+   "mncs-system-monitor/tui/monitor-app.mncs": 0,
+   "mncs-tui/examples/backend-repro.mncs": 0,
+   "mncs-tui/examples/charts-probe.mncs": 0,
+   "scale/app.mncs": 1,
+   "scale/dep.mncs": 1,
+   "scale/notes.md": 1
+  }
+ },
+ "note": "Rich canonical-v2 snapshots: every verdict (digests, kinds, tokens, declarations, headings, links, PRESS/RFC shapes, traversal admission) is a real MNCS kernel call; the host moves bytes, bounds queues, and sorts by the specified key. One process, one shared Kernels handle (pure memoization, as in tests): later worker counts re-verify hash convergence. Per-run call counts are deltas off the shared bridge counter; hashes are canonical.",
+ "repos": {
+  "mncs-actions": {
+   "bytes": 698,
+   "files": 1
+  },
+  "mncs-compiler": {
+   "bytes": 171,
+   "files": 1
+  },
+  "mncs-engine": {
+   "bytes": 2669,
+   "files": 2
+  },
+  "mncs-fabric": {
+   "bytes": 1744,
+   "files": 1
+  },
+  "mncs-harness": {
+   "bytes": 208,
+   "files": 2
+  },
+  "mncs-index": {
+   "bytes": 1116,
+   "files": 2
+  },
+  "mncs-language": {
+   "bytes": 171,
+   "files": 1
+  },
+  "mncs-language-service": {
+   "bytes": 1628,
+   "files": 1
+  },
+  "mncs-lineage": {
+   "bytes": 937,
+   "files": 1
+  },
+  "mncs-math": {
+   "bytes": 930,
+   "files": 1
+  },
+  "mncs-memory": {
+   "bytes": 1678,
+   "files": 2
+  },
+  "mncs-system-monitor": {
+   "bytes": 982,
+   "files": 1
+  },
+  "mncs-tui": {
+   "bytes": 1234,
+   "files": 2
+  }
+ },
+ "runs": [
+  {
+   "bytes_indexed": 14166,
+   "declarations": 92,
+   "docs": 18,
+   "files": 18,
+   "headings": 0,
+   "index_hash": "2c901b0774f3a984f9f695dc719da226f6ab7f50e7d28aa90b6417d4043c2802",
+   "mncs_calls": 2502,
+   "mncs_fingerprint": "",
+   "pressure_mentions": 2,
+   "relationships": 116,
+   "seed": 7,
+   "skipped": 0,
+   "terms": 954,
+   "wall_s": 1064.92,
+   "workers": 1
+  },
+  {
+   "bytes_indexed": 14166,
+   "declarations": 92,
+   "docs": 18,
+   "files": 18,
+   "headings": 0,
+   "index_hash": "2c901b0774f3a984f9f695dc719da226f6ab7f50e7d28aa90b6417d4043c2802",
+   "mncs_calls": 784,
+   "mncs_fingerprint": "",
+   "pressure_mentions": 2,
+   "relationships": 116,
+   "seed": 7,
+   "skipped": 0,
+   "terms": 954,
+   "wall_s": 81.93,
+   "workers": 2
+  }
+ ],
+ "tier": "family",
+ "tiers": {
+  "census": "every *.mncs under each sibling mncs-* repo (excluding SKIP_DIRS/symlinks); inventoried, not executed",
+  "family": "up to max_files_per_repo alphabetically-first *.mncs per repo, each at most per_file_bytes bytes; the executed scale corpus",
+  "mutation": "five-class edit batch (change/add/remove/rename/RFC+pressure) on a staged corpus; incremental == rebuild incl. rich+invalidation",
+  "survey": "alphabetically-first *.mncs per repo (legacy evidence rule)"
+ },
+ "total_bytes": 14166,
+ "total_files": 18
+}
