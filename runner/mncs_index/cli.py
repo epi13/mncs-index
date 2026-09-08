@@ -18,7 +18,7 @@ from .lineage import resolve as resolve_lineage
 from .model import hex16
 from .pipeline import BuildConfig
 from .query import QueryEngine
-from .store import Store
+from .store import DURABILITY_DEFAULT, DURABILITY_LEVELS, Store
 from .watch import Watcher
 
 
@@ -36,9 +36,50 @@ def _config(args) -> BuildConfig:
     )
 
 
+def cmd_check(args) -> int:
+    """Recovery/check command (RFC 0008): report store health, optionally
+    remove leftover staging files. Never guesses: only orphan temps are
+    repaired; HEAD/generation corruption stays reported for an operator."""
+    store = Store(args.store)
+    report = store.check()
+    repaired: list = []
+    if args.repair:
+        repaired = store.repair()
+        report = store.check()
+        report["repaired"] = repaired
+    print(json.dumps(report, indent=1))
+    return 0 if report["ok"] else 1
+
+
+def cmd_reclaim(args) -> int:
+    """Reclamation command (RFC 0009): delete only unpinned,
+    non-HEAD generations below HEAD (stale pins reaped first).
+    Never deletes HEAD, newer-than-HEAD artifacts, staging files,
+    or pins. Prints the JSON report; exit 0 always (reclamation
+    reports, it does not diagnose — use `check` for health)."""
+    store = Store(args.store)
+    report = store.reclaim(keep_recent=args.keep_recent)
+    print(json.dumps(report, indent=1))
+    return 0
+
+
+def cmd_compact(args) -> int:
+    """Compaction command (RFC 0010): deterministic in-place GC.
+
+    Deletes only schedule-selected unpinned generations below HEAD
+    (never HEAD, pinned generations, or newer-than-HEAD artifacts),
+    plus orphan staging tmps and superseded sidecars. Prints the
+    JSON report+metrics; exit 0 always (compaction reports, it does
+    not diagnose — use `check` for health)."""
+    store = Store(args.store)
+    report = store.compact(schedule=args.schedule, dry_run=args.dry_run)
+    print(json.dumps(report, indent=1))
+    return 0
+
+
 def cmd_build(args) -> int:
     kernels = _kernels(args)
-    store = Store(args.store)
+    store = Store(args.store, durability=args.durability)
     head = store.head()
     rich = bool(getattr(args, "rich", False))
     if args.incremental and head is not None:
@@ -245,6 +286,12 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--delay-ms", type=float, default=0.0)
     b.add_argument("--incremental", action="store_true")
     b.add_argument(
+        "--durability",
+        choices=list(DURABILITY_LEVELS),
+        default=DURABILITY_DEFAULT,
+        help="commit durability level (RFC 0008; default %(default)s)",
+    )
+    b.add_argument(
         "--rich",
         action="store_true",
         help="build canonical-v2 (source/heading/reference/pressure records)",
@@ -292,6 +339,41 @@ def build_parser() -> argparse.ArgumentParser:
         help="authoritative revalidation period in quiet windows",
     )
     w.set_defaults(func=cmd_watch)
+
+    c = sub.add_parser("check", help="check store health / recover (RFC 0008)")
+    c.add_argument("--store", required=True)
+    c.add_argument(
+        "--repair",
+        action="store_true",
+        help="remove leftover staging files only; HEAD/generation "
+        "corruption is never auto-repaired",
+    )
+    c.set_defaults(func=cmd_check)
+
+    r = sub.add_parser("reclaim", help="reclaim unpinned generations (RFC 0009)")
+    r.add_argument("--store", required=True)
+    r.add_argument(
+        "--keep-recent",
+        type=int,
+        default=0,
+        help="retain this many newest otherwise reclaimable generations",
+    )
+    r.set_defaults(func=cmd_reclaim)
+
+    k = sub.add_parser("compact", help="deterministic in-place compaction (RFC 0010)")
+    k.add_argument("--store", required=True)
+    k.add_argument(
+        "--schedule",
+        default="prune",
+        help="retention schedule: prune | keep-recent:N | checkpoint:N "
+        "(default %(default)s)",
+    )
+    k.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="compute victims and projected metrics without deleting anything",
+    )
+    k.set_defaults(func=cmd_compact)
     return p
 
 

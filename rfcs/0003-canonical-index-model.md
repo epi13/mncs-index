@@ -54,6 +54,18 @@ Canonical bytes cover format marker, discovery snapshot id, and records
 only; the store generation is publication metadata, so identical content
 hashes identically at any generation. Record identity is `(kind, path,
 seq)` with an MNCS-computed content digest; per-record establishment
-generation is tracked in non-canonical store sidecar (`established`) so it
-cannot break `incremental == rebuild`. Dual digests: host SHA-256 plus an
-MNCS fold over the canonical bytes (PRESS-006).
+generation (`established`) and per-record content hints (`crc`) are
+tracked in non-canonical store sidecars so they cannot break
+`incremental == rebuild` — two stores may share an `index_hash` while
+carrying different provenance/hints, by design. The v2 format marker
+re-hashes the whole corpus versus v1 (versioned hashing domain above);
+only empty-rich snapshots degrade to identical v1 bytes (RFC 0007).
+
+Lossy horizons (deterministic but information-destroying; invisible in
+the hash beyond the surviving bytes): `TERMS_PER_FILE_CAP` (256 terms),
+`TOKEN_MAX` (whole-token drop past 32 B), `MAX_NAME` (64 B) /
+`MAX_LINK_TARGET` (256 B), `KERNEL_WINDOW` (64 B kernel input; longer
+lines raise past the guard), extension slicer (`ext > 8` → unknown),
+sym dedup keep-first on `(path, sym, name)`. Identical hashes therefore
+mean identical *surviving* semantics, not identical source bytes —
+source truth lives in the corpus, the index is a derived view.

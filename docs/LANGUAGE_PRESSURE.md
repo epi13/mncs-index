@@ -8,6 +8,15 @@
 > crypto digests, unbounded text, or economical invocation. The grounded
 > ledger is `pressure/registry.md` (12 entries, 3 minimal reproducers).
 
+> Slice-7 consolidation (2026-09-08, `index/phase3-systems`): all
+> reproducers rerun against the current `mncs-language`. Two entries
+> resolved upstream — PRESS-004 (integer bitwise ops, stage-b1) and
+> PRESS-009 (two-level nested iteration, profile 0.11) — with
+> executable acceptance tests in `tests/test_language_probes.py`.
+> Everything else confirmed still open or partial at the recorded
+> severity; RFC 0010/0023/0026/0028 remain `NONE`. The handoff is
+> `docs/LANGUAGE_HANDOFF.md` (tiered by unblock value).
+
 ## Pressure domains
 
 The project is expected to pressure at least:

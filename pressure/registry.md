@@ -11,18 +11,22 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 | PRESS-001 | P0 | concurrency | No task spawning, threads, pools, or structured concurrency (lifecycle vocabulary confirmed usable, execution parallelism still absent) | Host `ThreadPoolExecutor` pipeline | `reproducers/probe-task-lifecycle.mncs` + `tests/test_language_probes.py` |
 | PRESS-002 | P0 | synchronization | No channels, bounded queues, mutexes, atomics, close semantics (confirmed; task.v1 gives cooperative hand-off vocabulary only) | Host `queue.Queue` + locks + drain protocol | `tests/test_concurrent_read.py` (bounded queues, saturation, blocked-reader cancel) + `tests/test_failure.py` + `tests/test_language_probes.py` |
 | PRESS-003 | P0 | filesystem | No traversal/watch effects in MNCS; bounded single-blob `host_read` partially available via grant-gated experiment path | Host discovery/read/polling | `reproducers/probe-host-read.mncs` + corpus/grant + `tests/test_language_probes.py` |
-| PRESS-004 | P2 | language semantics | Integer bitwise ops (`^ & \|`) missing; FNV-1a inexpressible | Xor-free MNCS fold (documented, not FNV) | `reproducers/int-bitwise-xor.mncs` (MNE103) |
+| PRESS-004 | P2 — RESOLVED upstream (slice 7) | language semantics | Integer bitwise ops (`^ & \|`) missing; FNV-1a inexpressible | Xor-free MNCS fold (documented, not FNV) | `reproducers/int-bitwise-xor.mncs` (former MNE103, now executes) |
 | PRESS-005 | P2 | collections/stdlib | `u64` sequences rejected as `iterate` domains (MNB101); unbounded strings/sort/split absent | 64 B windows; host scale-out differentially tested | `reproducers/traversal-u64-domain.mncs` (MNB101) |
 | PRESS-006 | P1 | hashing | Verify-only `sha256_digest` partially available via grant-gated experiment path (views ≤64 B, per-invocation compile); no in-kernel digest | MNCS fold + host SHA-256 cross-check | `reproducers/probe-sha256-abc.mncs` (NIST "abc" vector) + `tests/test_language_probes.py` |
 | PRESS-007 | P1 | watch/time | `clock_read` partially available via grant-gated experiment path (relational use only); still no filesystem watching | Polling watcher + host timing | `reproducers/probe-clock.mncs` + corpus + `tests/test_language_probes.py` |
 | PRESS-008 | P2 | error model | No typed cross-task error aggregation/cancellation distinction | Host failure tree + `MNCSError` mapping | `tests/test_failure.py` |
-| PRESS-009 | P3 | language semantics | Nested `iterate` rejected (MNE147) | Factored single-loop calls | `reproducers/nested-iterate.mncs` (MNE147) |
+| PRESS-009 | P3 — RESOLVED at profile 0.11 (slice 7); third-level nests still refused | language semantics | Nested `iterate` rejected (MNE147) | Factored single-loop calls | `reproducers/nested-iterate.mncs` (MNE147 ≤0.10) + `reproducers/nested-iterate-011.mncs` (0.11, executes) |
 | PRESS-010 | P2 | performance/tooling | One subprocess per kernel call (~10–250 ms); no batch/in-process API | Call batching via caching + digest flag | `tests/test_stress.py` timings |
 | PRESS-011 | P3 | diagnostics | MNB101 span covers the whole file; no traversable-type list | Trial-and-error probes (documented matrix) | `reproducers/traversal-u64-domain.mncs` (MNB101; shared with PRESS-005) |
 | PRESS-012 | P2 | cancellation | No cancellation/deadline semantics | Host events + drain protocol | `tests/test_failure.py` |
 | PRESS-013 | P1 | synchronization/persistence | No durable compare-and-swap / transaction effects for cross-process publication | Host `flock`-guarded HEAD check-and-swap in `Store.publish` | `tests/test_publish.py` |
 | PRESS-014 | P2 | collections/stdlib | No unbounded lines, line splitting, substring slicing, or corpus-scale sort/dedup for rich extraction | Host line/span plumbing + 64 B kernel windows; sort/dedup at merge | `tests/test_rich_model.py` |
 | PRESS-015 | P3 | language semantics | No relation/table values or transitive graph traversal over extracted edges | Single-hop host indexes; no transitive queries | `tests/test_rich_model.py` |
+| PRESS-016 | P1 | persistence | No durable-commit effects (file fsync, directory fsync, crash-recovery check) in MNCS | Host `os.fsync`/dir-sync commit protocol + `check` in `Store` | `tests/test_durability.py` |
+| PRESS-017 | P1 | synchronization/persistence | No snapshot-handle, lease, epoch, or pin primitives for cross-process MVCC in MNCS | Host `.pins/` files + PID-liveness reaping in `Store` | `tests/test_mvcc.py` |
+| PRESS-018 | P2 | persistence | No storage-compaction / generation-GC effects in MNCS | Host in-place `Store.compact` (schedules + metrics) | `tests/test_compact.py` |
+| PRESS-019 | P2 | distribution | No partition transport, distributed-merge wire format, or worker loss/retry/duplicate/reorder semantics for fabric execution | Not distributed: slice-6 gate BLOCKED, local-only builds | `evidence/fabric-scale-gate.json` |
 
 ## PRESS-001 — No concurrency primitives (P0, concurrency, runtime)
 
@@ -66,6 +70,16 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 - Classification: runtime/stdlib (missing), language semantics (missing).
 - Evidence: `runner/mncs_index/pipeline.py`; determinism matrix
   `tests/test_determinism.py`.
+- Slice-7 verdict 2026-09-08: **confirmed still missing.**
+  mncs-language RFC 0010 implementation status is still `NONE`; the
+  lifecycle probe reran green with identical verdicts (DONE `true`
+  321 steps, CANCELLED 142 steps, invalid flags 0), i.e. vocabulary
+  only, still no spawnable threads/pools/join/fan-out.
+- Acceptance-test-after-language-fix: `mncs execute` a program that
+  spawns two tasks each returning a distinct value and joins both;
+  assert both values return and `tests/test_determinism.py` worker
+  matrix still converges with the pipeline fan-out expressed in MNCS
+  (`bridge.py` subprocess-driver call count drops to ~0 for fan-out).
 
 ## PRESS-002 — No synchronization primitives (P0, synchronization, runtime)
 
@@ -102,6 +116,15 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 - Cost: shutdown/cancellation semantics — a required RFC 0002 property —
   cannot be expressed or tested in MNCS.
 - Classification: runtime/stdlib.
+- Slice-7 verdict 2026-09-08: **confirmed still missing** (RFC 0010
+  still `NONE`; no new channel/mutex/atomic syntax in any profile or
+  stdlib module). Probe file unchanged.
+- Acceptance-test-after-language-fix: an MNCS bounded channel with
+  close semantics passes N items from 2 producers to 1 consumer and
+  the consumer observes close exactly once; assert
+  `tests/test_concurrent_read.py` + `tests/test_failure.py` pass with
+  both queue stages expressed as language channels (host
+  `queue.Queue` deleted).
 
 ## PRESS-003 — No filesystem effects (P0, filesystem, language/runtime)
 
@@ -143,6 +166,16 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   Runner: `pressure/reproducers/run-language-probes.sh`;
   regression: `tests/test_language_probes.py` (granted + fail-closed).
 - Classification: language semantics (effects), runtime, stdlib.
+- Slice-7 verdict 2026-09-08: **confirmed still partial** (RFC 0008
+  still `PARTIAL`). Reran `run-language-probes.sh`: ALL PROBES GREEN
+  with identical verdicts (blob-len 17, `steps: 3`; fail-closed on
+  all three negatives). Still single-blob ≤64 B only; no traversal,
+  metadata, or watch surface.
+- Acceptance-test-after-language-fix: an MNCS program enumerates a
+  fixture directory under an explicit traversal grant and returns the
+  exact sorted entry list matching `discover.py`; assert
+  `tests/test_determinism.py` discovery snapshot comes from the
+  language call (host walk deleted).
 
 ## PRESS-004 — Integer bitwise operators missing (P2, semantics, compiler)
 
@@ -159,6 +192,20 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   function and cannot cite its analysis.
 - Cost: algorithm substitution in a hashing core; mild avalanche loss.
 - Classification: compiler/frontend (operator typing).
+- Slice-7 verdict 2026-09-08 (`index/phase3-systems`): **RESOLVED
+  upstream — no longer pressure.** mncs-language `stage-b1`
+  (`64ad113`) made `^ & |` total over all eight integer widths
+  (wrapping intent; 341-case matrix, independent Python oracle,
+  341/341 on all five backends). Reran against the current binary
+  (`mncs 0.1.0`): `xor_u64(12,10)` returns 6, `and_u64` returns 8,
+  `or_u64` returns 14 (`steps: 2`, `status: returned`). The
+  reproducer keeps its 0.8 header — the fix applies to existing
+  profiles, not a new one. mncs-index keeps the xor-free fold in
+  `src/digest.mncs` (pinned by `tests/test_differential.py`; no
+  behavior change needed), but FNV-1a-style folds are now expressible.
+- Acceptance-test-after-language-fix (executable):
+  `tests/test_language_probes.py::test_int_bitwise_u64_fixed_slice7`
+  (all three ops, exact values).
 
 ## PRESS-005 — Traversal-domain and unbounded-data gaps (P2, stdlib)
 
@@ -178,6 +225,14 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 - Cost: ~8x call amplification vs word-oriented kernels; host scale-out
   code must be maintained alongside kernel specs.
 - Classification: compiler (domain rule), stdlib (missing collections).
+- Slice-7 verdict 2026-09-08: **confirmed still missing.** Reran
+  `traversal-u64-domain.mncs`: still MNB101 with the same whole-file
+  span (start 0, end 615). No traversal-domain change in any new
+  profile (0.11 adds nesting + counted index only; 0.12 adds float).
+- Acceptance-test-after-language-fix: the unmodified reproducer
+  elaborates cleanly and `over_u64_4([1,2,3,4])` returns 10; assert
+  `tests/test_differential.py` passes with byte windows widened to a
+  word-oriented kernel (call amplification gone).
 
 ## PRESS-006 — No cryptographic digests (P1, hashing, stdlib)
 
@@ -208,6 +263,15 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 - Cost: the headline canonical hash is half-outsourced; long-term
   content-addressing story depends on host crypto.
 - Classification: stdlib/runtime.
+- Slice-7 verdict 2026-09-08: **confirmed still partial.** Reran:
+  NIST "abc" vector still digests exactly (`steps: 2`,
+  `crypto:sha256` provenance; fail-closed without grant). Still
+  verify-only, views ≤64 B, experiment path only (~0.13 s/call).
+- Acceptance-test-after-language-fix: an in-kernel digest over a
+  >64 B input matches `sha256sum` on the same bytes through the fast
+  `execute` path (no grant, no per-call backend compile); assert the
+  dual-digest workaround collapses to one digest in
+  `tests/test_determinism.py` (host SHA-256 cross-check deleted).
 
 ## PRESS-007 — No watching or clocks (P1, watch/time, runtime)
 
@@ -252,6 +316,15 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 - Cost: event-burst/duplication pressure cannot be exercised against real
   watcher semantics; latency is poll-bound.
 - Classification: runtime/stdlib.
+- Slice-7 verdict 2026-09-08: **confirmed still partial** (RFC 0023
+  still `NONE`). Reran: clock probe green with identical verdicts
+  (`past-expired true`, `steps: 6`; fail-closed without grant);
+  still relational booleans only, no watch effect at source level.
+- Acceptance-test-after-language-fix: an MNCS watch effect delivers a
+  coalesced event for a fixture mutation within a bounded quiet
+  window and `tests/test_watch.py` passes with hints as language
+  values (polling `watch.py` loop deleted, `validate_every` fallback
+  redundant).
 
 ## PRESS-008 — No concurrent error aggregation (P2, error model)
 
@@ -265,6 +338,15 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   `tests/test_failure.py`, including "failed builds never publish".
 - Cost: failure semantics — an RFC 0002 requirement — are host-defined.
 - Classification: language semantics, runtime.
+- Slice-7 verdict 2026-09-08: **confirmed still missing** (RFC 0011
+  still `PARTIAL` with no cancellation/deadline additions; RFC 0010
+  still `NONE`). No reproducer change possible — there is no syntax
+  to attempt.
+- Acceptance-test-after-language-fix: an MNCS task tree where one
+  leaf fails returns a typed multi-error distinguishing the failure
+  from a sibling cancellation; assert `tests/test_failure.py` passes
+  with the host failure tree replaced by language propagation
+  (`Pipeline._fail` deleted).
 
 ## PRESS-009 — Nested iteration rejected (P3, semantics, compiler)
 
@@ -277,6 +359,23 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   bounded (64x8 comparisons), no capability loss for this workload.
 - Cost: ergonomic only.
 - Classification: compiler/frontend.
+- Slice-7 verdict 2026-09-08 (`index/phase3-systems`): **RESOLVED
+  upstream for two-level nests (profile 0.11); third level still
+  refused everywhere.** mncs-language `stage-b3` (`179a404`) permits
+  one bounded iteration inside another with distinct identities plus
+  a readable counted index (14-case matrix, 14/14 on all five
+  backends; negatives pin MNE147/MNE102 limits). Reran: the 0.8
+  reproducer still fails MNE147 + consequential MNE102s (profiles
+  ≤0.10 unchanged by design); the byte-identical
+  `reproducers/nested-iterate-011.mncs` (`mncs 0.11`) elaborates and
+  executes (`returned false` on a haystack with no full needle copy,
+  `steps: 2047`). Kernels stay factored (valid on every profile; no
+  migration needed) — the 0.11 form is available for future kernels
+  that genuinely need two-dimensional scans.
+- Acceptance-test-after-language-fix (executable):
+  `tests/test_language_probes.py::test_nested_two_level_profile011_slice7`
+  (0.11 nest executes) +
+  `test_nested_still_refused_below_011_slice7` (0.8 still MNE147).
 
 ## PRESS-010 — Per-call process invocation cost (P2, performance/tooling)
 
@@ -296,6 +395,16 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 - Cost: stress economics; CI minutes; temptation to shrink coverage.
 - Classification: tooling/runtime. Evidence: `tests/test_stress.py`
   timing print; `bridge.py` instrumentation (`calls`, `max_in_flight`).
+- Slice-7 verdict 2026-09-08: **confirmed still missing and still the
+  binding constraint.** `bridge.call` is still a synchronous local
+  `mncs execute` subprocess driver (read 2026-09-08); no batch or
+  in-process API appeared upstream. Ordering dependency for PRESS-019
+  stands.
+- Acceptance-test-after-language-fix: one session/batch handle
+  executes the full fixture build with per-call overhead <1 ms
+  (vs ~10 ms idle today); assert `tests/test_stress.py` wall time
+  drops ≥5x at equal call counts with identical canonical hashes
+  (per-call `subprocess.run` in `bridge.py` deleted).
 - Update 2026-09-07 (`index/phase2-pressure`, slice 1): hint-hit paths in
   `incremental_snapshot` (`runner/mncs_index/indexer.py`) are now
   authoritatively validated — size/CRC32 no longer reuse records without
@@ -319,6 +428,36 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   converging canonical hashes; call counts and wall time scale with the
   subprocess-per-call model, which is now the binding constraint on
   corpus size, not kernel expressiveness.
+- Update (phase-3 gap review): call counts are now reproducible, not
+  just convergent. Producer memo reads take the kernel lock
+  (`pipeline.py`), closing the torn-read duplicate-submission race
+  that made `Bridge.stats.calls` run-dependent under concurrency —
+  pinned by `tests/test_determinism.py::
+  test_kernel_call_counts_reproducible` (two cold-cache workers=8
+  builds, identical hashes AND identical counts). Economics numbers
+  are therefore measurements, not samples.
+- Update 2026-09-08 (`index/phase3-systems`, slice 5): scale campaign
+  (`tests/test_scale.py`, `runner/mncs_index/ecosystem.py`,
+  `evidence/ecosystem-mncs-family.json`). Hermetic proof (own 6-file
+  `*.mncs` corpus, 9868 B): workers 4 vs 1 converge
+  (`98621db5…`; cold w=4 build 1811 calls / 308 s wall, 187.9
+  calls/KB). Family tier (18 files / 14166 B across 13 sibling repos;
+  census 554 files / 2.07 MB inventoried, 536 exclusions recorded with
+  reasons): workers 1 vs 2 converge (`2c901b07…`; cold 2502 calls /
+  1065 s, warm-cache second config 784 calls / 82 s). Five-class
+  mutation batch (change/add/remove/rename/RFC+pressure): per-path
+  verdicts exact, all six tables canonically equal
+  (docs 20, terms 903, syms 90, headings 1, rels 115, press 3),
+  traversal/invalidation agree under both the MNCS verdict and the host
+  mirror on 10 roots. Campaign total 5488 calls / 1466 s wall;
+  measured 396.7 calls/KB projects the census at ~804k calls — so the
+  census stays inventoried, not executed. Contention note: on a loaded
+  box (load ~10) workers=1 beat workers=4 wall-clock (103 s vs 308 s on
+  the hermetic corpus) — the subprocess storm is the bottleneck, wider
+  fan-out only deepens it. No meaning moved out of MNCS: every verdict
+  counted is a kernel subprocess call, caches are pure-function
+  memoization, and traversal checks run the MNCS verdict with the host
+  mirror cross-checked, never substituted.
 
 ## PRESS-011 — Coarse traversal diagnostics (P3, diagnostics, compiler)
 
@@ -331,6 +470,17 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   whole-file span while `[i64; 4]`/`[byte; 4]` elaborate cleanly.
 - Cost: ergonomic; slowed kernel development by ~30 minutes.
 - Classification: compiler diagnostics.
+- Slice-7 verdict 2026-09-08: **confirmed still coarse.** Reran
+  `traversal-u64-domain.mncs`: MNB101 span is still the whole file
+  (start 0, end 615), and no traversable-type list is documented.
+  (Contrast: MNE147 now points at the inner `iterate`, lines
+  12/column 9 — nesting diagnostics are precise; domain diagnostics
+  are not.)
+- Acceptance-test-after-language-fix: the unmodified reproducer
+  reports MNB101 with a span covering only the offending `iterate`
+  domain expression, and a documented domain-eligibility rule lists
+  exactly which element types traverse; assert by running the
+  reproducer and checking the span bounds.
 
 ## PRESS-012 — No cancellation semantics (P2, runtime, language)
 
@@ -348,6 +498,17 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   (cancel lands mid-blocked-read -> prompt `BuildCancelled`, no hang).
 - Cost: shutdown latency is host-bounded, not language-guaranteed.
 - Classification: runtime, language semantics.
+- Slice-7 verdict 2026-09-08: **confirmed still missing** (RFC 0010
+  `NONE`, RFC 0011 `PARTIAL` without deadlines; pipeline code read
+  2026-09-08: cancel is a `threading.Event` checked between items,
+  in-flight `mncs execute` calls run to completion bounded only by
+  the 60 s bridge timeout).
+- Acceptance-test-after-language-fix: a scoped deadline cancels a
+  blocked kernel call within the deadline and the pipeline observes
+  `BuildCancelled` promptly; assert
+  `tests/test_concurrent_read.py::test_cancellation_releases_blocked_readers`
+  and `tests/test_failure.py` cancellation tests pass with
+  language-propagated cancellation (host `cancel_event` deleted).
 
 ## PRESS-013 — No durable compare-and-swap for publication (P1, synchronization/persistence, runtime)
 
@@ -389,8 +550,24 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   thread overlap, cross-process fork race, failure/cancellation overlap,
   readers-during-publish); mutation probe (CAS check disabled ->
   reversed/overlap/contract tests fail: stale generation becomes HEAD).
+- Reproducer status: no `.mncs` program can demonstrate this gap —
+  Profile 0.8 source has no effects at all (no files, no locks, no
+  processes), so a storage/sync capability is inexpressible by
+  construction, not merely unattempted. The downstream test files
+  above ARE the reproducers: each fails if the host workaround is
+  removed, and each names the language effect that would replace it.
 - Classification: runtime/stdlib (missing durable sync), language
   semantics (no transaction effects).
+- Slice-7 verdict 2026-09-08: **confirmed still missing** (RFC 0026
+  still `NONE`, RFC 0010 still `NONE`). Store code read 2026-09-08:
+  CAS still runs under a host `flock` (fcntl/msvcrt platform guard)
+  with a host `StaleGenerationError` — no language transaction
+  effect appeared.
+- Acceptance-test-after-language-fix: an effect-gated durable CAS
+  publishes generation N iff HEAD is still M across two racing
+  processes with exactly one winner; assert `tests/test_publish.py`
+  passes with the `flock` critical section replaced by the language
+  transaction (`.HEAD.lock` deleted).
 
 ## PRESS-014 — Unbounded text plumbing for rich extraction (P2, stdlib)
 
@@ -417,6 +594,17 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   64 B-boundary seam is pinned (`test_overlong_and_foreign_bytes_skipped`).
 - Cost: the extractor's control plane is host code; only the verdicts
   are MNCS meaning.
+- Slice-7 verdict 2026-09-08: **confirmed still missing.**
+  `library/std/text_scan` (+`text_view`, `text_map`) is still
+  64 B-window bounded (`window_equal`/`contains`/`find` all take
+  `[byte; up_to 64]`); no unbounded strings, line splitting, or
+  corpus-scale sort exist, so the host split/slice/sort/dedup in
+  `extract.py` + `globalize` stays.
+- Acceptance-test-after-language-fix: chunked line cursors feed an
+  MNCS pipeline that returns sorted deduped declaration rows for a
+  fixture file equal to `globalize` output; assert
+  `tests/test_rich_model.py::test_extract_differential_random` passes
+  with host line splitting deleted.
 - Update (gap review): two further meaning decisions live outside MNCS
   verdicts and are pinned only by host-side differential tests, not by an
   in-language specification — the cross-window word-overcount repair in
@@ -456,7 +644,237 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   (a `moved` pair still carries (2, 1)). Tested by
   `tests/test_graph_invalidation.py` (fan-out, cycles, duplicates,
   deterministic ambiguity).
+- Update 2026-09-08 (`index/phase3-systems`, slice 4): bounded
+  transitive traversal is now offered (`src/graph.mncs`,
+  `runner/mncs_index/graph.py`, `QueryEngine.dependencies` /
+  `transitive_dependents` / `invalidation_set`). The split is
+  deliberate: per-candidate admission (visited / depth / node budget)
+  is an MNCS verdict (`should_visit`, `depth_next` in
+  `mncs.index.graph.v1`), while adjacency, node identity, visited
+  sets, and canonical ordering stay host-explicit — relation values,
+  joins, and unbounded traversal remain inexpressible, so the entry
+  stays open. Semantics: exact path/symbol identity, first-visit-wins
+  (cycles/duplicates terminate, emit once), sorted deduped adjacency +
+  BFS + re-sorted output (insertion/worker order cannot leak),
+  `max_depth` in edges (one file hop = 2) and `max_nodes` over emitted
+  files with `truncated` attribution (visited-skips never truncate),
+  dangling targets (missing/renamed/deleted) are leaves, never errors.
+  The host mirror is differentially pinned against the kernel.
+  Tested by `tests/test_invalidation.py` (chains, diamonds, fan-out,
+  fan-in, cycles, duplicates, missing/renamed/deleted targets,
+  budgets, order sweeps, incremental == rebuild incl. invalidation).
+- Update (phase-3 gap review): two precision fixes with honest
+  scoping. (1) `max_nodes` is now a GLOBAL cap over total dependents
+  across roots (each sub-walk's budget shrinks by gathered nodes),
+  not per-walk — pinned by `test_invalidation_set_budget_is_global`
+  (multi-root, permutation-stable). (2) The kernel/host split is now
+  contractual, not aspirational: every traversal call site checks
+  `visited` first and passes `visited=False`, so the kernel's visited
+  branch fires only through direct unit tests
+  (`test_should_visit_truth_table`); the `depth_next` u64 wrap is
+  characterized (`2^64-1 → 0`) and unreachable in walks because
+  admission precedes every step. The kernel owns two scalar checks;
+  everything structural (adjacency, identity, order, iteration)
+  remains host — this entry stays open until relation values land.
 - Classification: language semantics, stdlib.
+- Slice-7 verdict 2026-09-08: **confirmed still missing at language
+  level** (no relation/table/join values in any profile or stdlib
+  module surveyed 2026-09-08; index-side bounded traversal in
+  `src/graph.mncs` + `graph.py` is a workaround, not the capability).
+- Acceptance-test-after-language-fix: an MNCS relation value holds
+  the extracted edge set with deterministic dedup/order and a bounded
+  transitive closure over fixture edges equals
+  `QueryEngine.invalidation_set`; assert `tests/test_invalidation.py`
+  passes with adjacency/visited sets as language values (host
+  dictionary indexes deleted).
+
+## PRESS-016 — No durable-commit effects (P1, persistence, runtime)
+
+- Observed: the RFC 0008 commit protocol (file `fsync` before each
+  rename, directory `fsync` after each rename, post-commit
+  verification re-read, crash-recovery `check`) is host-OS effects
+  code in `runner/mncs_index/store.py`. `mncs-language` RFC 0026
+  (persistence) implementation status is `NONE`, and no
+  durability/flush/sync effect exists to express "make this file and
+  its directory entry survive an OS crash".
+- Desired: effect-gated durable-commit primitives (file sync,
+  directory sync, or a single durable-commit effect) callable from
+  MNCS, so the L0–L3 levels are language-level guarantees rather than
+  host `os.fsync` calls.
+- Workaround: explicit `DURABILITY_LEVELS` with per-level barrier
+  counts pinned by `tests/test_durability.py::test_fsync_barriers_per_level`;
+  POSIX directory sync with a documented Windows best-effort
+  degradation (RFC 0008 portability).
+- Why the workaround is insufficient: durability lives outside the
+  language's effect system, so MNCS cannot name, audit, or test the
+  guarantee; a future `mncs-store` backend would re-implement rather
+  than reuse a language contract.
+- Evidence: `tests/test_durability.py` (barriers, real-death crash
+  matrix, corruption fail-closed, `check` command).
+- Reproducer status: no `.mncs` program can demonstrate this gap
+  (Profile 0.8 source has no file/durability effects to attempt).
+  The downstream tests are the reproducers: journal-forgery reports
+  `GEN_GAP`, `.reclaimed.tmp`/manifest corruption is reported, L0
+  barrier-freedom is counted, Windows no-op/lock branches are stubbed
+  (`test_forged_reclaimed_journal_reports_gap`,
+  `test_l0_gc_issues_no_barriers`,
+  `test_windows_dirsync_noop_and_msvcrt_lock`). Gap-review note:
+  OS-crash survival itself is protocol-construction, not test-proven —
+  stated in `store.py` and RFC 0008, not hidden.
+- Classification: runtime (missing persistence effects).
+- Slice-7 verdict 2026-09-08: **confirmed still missing** (RFC 0026
+  still `NONE`; durability still lives in `os.fsync`/dir-sync calls
+  in `store.py`, read 2026-09-08).
+- Acceptance-test-after-language-fix: an effect-gated durable commit
+  over a fixture generation survives a crash-injection at each of
+  the three windows with post-crash state old-complete OR
+  new-complete; assert `tests/test_durability.py` passes with the
+  `DURABILITY_LEVELS` barrier code replaced by the language effect
+  (host `os.fsync` deleted).
+
+## PRESS-017 — No snapshot-handle / lease / epoch primitives (P1, synchronization/persistence)
+
+- Observed: the RFC 0009 MVCC protocol (explicit `PinnedSnapshot`
+  handles, `.pins/` generation pins, stale-pin reaping, unpinned-only
+  `reclaim`) is host-filesystem effects code in
+  `runner/mncs_index/store.py`. MNCS offers no handle, lease, epoch,
+  reference-count, or pin primitive to express "this generation must
+  survive while a reader holds it" — `mncs-language` RFC 0010
+  (concurrency) status `NONE`, RFC 0026 (persistence) `NONE` — so
+  cross-process reader protection, orphan-pin reclamation, and the
+  reclaimed-vs-lost distinction (`.reclaimed` record) cannot be
+  named, audited, or tested in-language.
+- Desired: effect-gated snapshot handles with scoped lifetime
+  (acquire/release as a language contract), plus a lease or epoch
+  primitive so dead-reader protection expires without PID probing.
+- Workaround: pin files named `gen-NNNNNN.<pid>.<unique>.pin` with
+  file fsync + best-effort dir sync; liveness by `os.kill(pid, 0)`
+  probe, conservative toward alive; `reclaim` reaps stale pins first
+  under the exclusive `.HEAD.lock`. Pinned by
+  `tests/test_mvcc.py` (orphan-pin reap after real fork +
+  `os._exit` death, 1-writer + 4-reader and 3-writer + 2-reader
+  process races, readers across crash/recovery).
+- Why the workaround is insufficient: PID liveness has a known
+  PID-reuse hole (a dead pin can look live until the pid is
+  recycled past — worst case is delayed reclamation, never a
+  deleted live generation, since pins only protect); pin-dir sync
+  is best-effort rather than a durable-commit effect; none of the
+  guarantee is expressible as an MNCS effect, so a future
+  `mncs-store` backend would re-implement rather than reuse a
+  language contract.
+- Evidence: `tests/test_mvcc.py`; `rfcs/0009-multiprocess-mvcc.md`.
+- Reproducer status: no `.mncs` program can demonstrate this gap (no
+  handle/lease/process effects in source). The downstream tests are
+  the reproducers, including the injected-probe PID-reuse directions
+  (`test_pid_reuse_delays_but_never_deletes`) and the typed retry
+  contract (`test_open_retry_contract_is_typed`).
+- Classification: runtime (missing synchronization/persistence
+  effects), language semantics (no handle/lease vocabulary).
+- Slice-7 verdict 2026-09-08: **confirmed still missing** (RFC 0010
+  and RFC 0026 still `NONE`; `.pins/` files + PID-liveness reaping
+  still the mechanism, read 2026-09-08).
+- Acceptance-test-after-language-fix: a scoped snapshot handle pins
+  generation N across a writer publishing N+1 in another process,
+  and the reader still reads N; assert `tests/test_mvcc.py` passes
+  with pin files replaced by language handles (`.pins/` directory
+  and `os.kill(pid, 0)` probing deleted).
+
+## PRESS-018 — No storage-compaction / generation-GC effects (P2, persistence)
+
+- Observed: the RFC 0010 compaction protocol (retention schedules
+  over obsolete generations, orphan-staging triage, superseded
+  sidecars, storage metrics: counts, bytes, amplification,
+  reclaimed bytes, duration) is host-filesystem effects code in
+  `runner/mncs_index/store.py`. MNCS offers no enumerate-storage,
+  measure-bytes, or atomic-delete-generation effects —
+  `mncs-language` RFC 0026 (persistence) status `NONE` — so
+  "reclaim exactly the generations no live reader pins, with
+  query-before == query-after" cannot be named, audited, or tested
+  in-language.
+- Desired: effect-gated storage accounting (byte counts over named
+  generations) plus a deletion effect scoped by a
+  reader-protection contract (lease/epoch from PRESS-017), so a
+  compaction schedule is an MNCS-expressible policy rather than
+  host `os.unlink` calls.
+- Workaround: `Store.compact(schedule)` under the exclusive
+  `.HEAD.lock` — pid-attributed staging triage, record-first
+  `.reclaimed` updates, atomic `.compact.json` manifest. Pinned by
+  `tests/test_compact.py` (schedules, query/hash equivalence,
+  metrics truthfulness, live-reader process + threads, three
+  crash-injection points with resume convergence).
+- Why the workaround is insufficient: retention policy lives in
+  host strings, not a checkable language contract; byte metrics
+  come from `os.path.getsize`, with no in-language storage model
+  to test a schedule against; interruption safety rests on host
+  fsync discipline (PRESS-016), not an effect the language can
+  reason about.
+- Evidence: `tests/test_compact.py`; `rfcs/0010-deterministic-compaction.md`.
+- Reproducer status: no `.mncs` program can demonstrate this gap (no
+  storage-enumeration/deletion effects in source). The downstream
+  tests are the reproducers, including preview==real victim agreement
+  (`test_preview_matches_real_with_dead_pin`) and the global-budget
+  invalidation cap that exposes the same host-owns-structure boundary
+  from the graph side (`test_invalidation_set_budget_is_global`).
+- Classification: runtime (missing persistence/GC effects).
+- Slice-7 verdict 2026-09-08: **confirmed still missing** (RFC 0026
+  still `NONE`; retention schedules + `os.unlink` reclamation still
+  host code, read 2026-09-08).
+- Acceptance-test-after-language-fix: a language-expressible
+  retention schedule reclaims exactly the unpinned generations with
+  query-before == query-after over a fixture store; assert
+  `tests/test_compact.py` passes with the schedule as a language
+  policy value (host retention strings and `os.unlink` calls
+  deleted).
+
+## PRESS-019 — No fabric partition/merge/worker-loss semantics (P2, distribution)
+
+- Observed: slice-6 evaluation 2026-09-08 (`index/phase3-systems`) gated
+  fabric/cross-machine work on the slice-5 scale audit finding practical
+  infra. It did not: local fan-out already anti-scales under load
+  (loaded-box workers=1 beat workers=4 wall-clock, 103 s vs 308 s on the
+  hermetic 6-file corpus), the family campaign cost 5488 kernel calls /
+  1466 s wall for 18 files, and 396.7 calls/KB projects the 554-file /
+  2.07 MB census at ~804k calls — inventoried, not executed
+  (`evidence/ecosystem-mncs-family.json`).
+- Missing, with exact boundaries: (1) partition/work-unit transport —
+  `runner/mncs_index/bridge.py::call` is a synchronous local `mncs
+  execute` subprocess driver only (no work-unit type, remote endpoint,
+  or capability passing; the only fabric mentions in-repo are
+  future-boundary docs: `docs/INTEGRATIONS.md`, `docs/ARCHITECTURE.md`
+  layer 7, `ROADMAP.md` Phase 5, `SECURITY.md`); (2) distributed merge —
+  `results_to_records` + `extract.globalize` + `kernels.tree_combine`
+  are shared-memory only (in-process sorts, in-process `ThreadPoolExecutor`
+  over one `Kernels` object; no partial-partition wire format or
+  partition-hash-then-merge protocol); (3) worker loss/retry/duplicate/
+  reorder semantics — the pipeline failure model is fail-fast only
+  (`Pipeline._fail` first-error capture + stop broadcast + drain;
+  missing leaf -> `BuildFailed`), so at-least-once delivery with
+  deterministic merge is unimplementable.
+- Desired: a fabric work-unit transport honoring the
+  `docs/INTEGRATIONS.md` capability-boundary contract, a specified
+  partial-partition wire format proven to merge equal to the local hash,
+  and a retry/duplicate/reorder/loss harness against worker-kill
+  injection. PRESS-010 (batch/in-process kernel API) is the ordering
+  dependency: per-64-B-window subprocess dispatch makes per-item remote
+  execution uneconomical regardless of transport.
+- Workaround: none — distribution was NOT implemented and NOT faked;
+  all builds stay local. Reopen criteria are recorded in
+  `evidence/fabric-scale-gate.json`.
+- Classification: runtime/transport (missing), language semantics
+  (no distributed merge/worker-loss effects).
+- Slice-7 verdict 2026-09-08: **confirmed still blocked** (RFC 0028
+  still `NONE`; `bridge.call` re-read 2026-09-08 as a synchronous
+  local subprocess driver; pipeline still fail-fast). PRESS-010
+  ordering dependency stands — no rerun of the scale campaign was
+  needed because neither the cost model nor the missing interfaces
+  changed.
+- Acceptance-test-after-language-fix (all three must hold): (1) a
+  fabric work-unit transport ships one fixture partition and returns
+  its partial result; (2) partition-hash-then-merge over two
+  partitions equals the local canonical hash; (3) a worker-kill
+  injection still converges via retry/duplicate-suppression. Assert
+  with a new `tests/test_distributed.py` plus the reopen criteria in
+  `evidence/fabric-scale-gate.json`.
 
 ## Not pressure (deliberate non-findings)
 

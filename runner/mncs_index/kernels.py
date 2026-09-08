@@ -23,6 +23,8 @@ ORDER_SRC = "order.mncs"
 ORDER_MOD = "mncs.index.order.v1"
 EXTRACT_SRC = "extract.mncs"
 EXTRACT_MOD = "mncs.index.extract.v1"
+GRAPH_SRC = "graph.mncs"
+GRAPH_MOD = "mncs.index.graph.v1"
 
 MASK64 = (1 << 64) - 1
 FNV_BASIS = 14695981039346656037
@@ -370,6 +372,45 @@ class Kernels:
                 "classify_rfc_token",
                 [seq_bytes(tok), u64(len(tok))],
             ),
+        )
+
+    # -- graph.v1 -----------------------------------------------------------
+    # Bounded graph-local traversal verdicts (PRESS-015). Pure scalar
+    # checks over one candidate node: the host owns adjacency, visited
+    # sets, and ordering; these kernels decide admit/skip and depth
+    # stepping. `should_visit_host` is the exact host mirror used when
+    # no kernels handle is supplied (differentially pinned).
+    def should_visit(
+        self, visited: bool, depth: int, max_depth: int, used: int, limit: int
+    ) -> int:
+        return self.b.call_u64(
+            GRAPH_SRC,
+            GRAPH_MOD,
+            "should_visit",
+            [
+                boolean(visited),
+                u64(depth),
+                u64(max_depth),
+                u64(used),
+                u64(limit),
+            ],
+        )
+
+    @staticmethod
+    def should_visit_host(
+        visited: bool, depth: int, max_depth: int, used: int, limit: int
+    ) -> int:
+        if visited:
+            return 0
+        if max_depth < depth:
+            return 0
+        if limit <= used:
+            return 0
+        return 1
+
+    def depth_next(self, depth: int) -> int:
+        return self.b.call_u64(
+            GRAPH_SRC, GRAPH_MOD, "depth_next", [u64(depth)]
         )
 
     def fold_bytes(self, data: bytes) -> int:

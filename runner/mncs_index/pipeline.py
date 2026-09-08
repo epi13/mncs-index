@@ -217,7 +217,13 @@ class Pipeline:
             # Empty files need no MNCS call: their digest is defined by
             # the kernel as empty_digest() (handled in assembly).
             # Token validation in batches of 8 through validate8.
-            uncached = [t for t in plan.tokens if t not in self.k._token_valid]
+            # The memo read takes the kernel lock: consumers publish
+            # verdicts under it, and an unlocked scan can miss a
+            # just-published verdict, submit a duplicate K_TOKVAL,
+            # and make Bridge.stats.calls run-dependent (PRESS-010
+            # economics must be reproducible under concurrency).
+            with self.k._lock:
+                uncached = [t for t in plan.tokens if t not in self.k._token_valid]
             for b in range(0, len(uncached), 8):
                 self._check_cancel()
                 batch = tuple(uncached[b : b + 8])
@@ -227,8 +233,13 @@ class Pipeline:
                 with state_lock:
                     if tok in tok_digests or tok in submitted_digests:
                         continue
-                    if tok in self.k._token_digest:
-                        tok_digests[tok] = self.k._token_digest[tok]
+                    # Kernel memo ships under the kernel lock, not the
+                    # pipeline state lock (same duplicate-submission
+                    # race as above).
+                    with self.k._lock:
+                        known = self.k._token_digest.get(tok)
+                    if known is not None:
+                        tok_digests[tok] = known
                         continue
                     submitted_digests.add(tok)
                 self._check_cancel()
