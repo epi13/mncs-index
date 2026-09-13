@@ -1,0 +1,12 @@
+{
+  "schema_version": "mncs-family.repository-manifest/v0alpha1",
+  "repository": "mncs-index",
+  "revision": 1,
+  "manifest_location": "in-repository",
+  "authority": {"note": "Index owns derived discovery, ranking, relation, traversal, and deterministic query structures."},
+  "contracts": {
+    "provides": [{"contract": "derived-index", "version": "1", "kind": "query-contract", "stability": "experimental", "fingerprint_sources": ["src/", "runner/"]}],
+    "consumes": [{"contract": "mncs-language.source-profile", "envelope": {"op": "compatible-minor", "version": "0.16"}, "required": true, "evidence_refs": ["tests/test_kernels.py"]}],
+    "tests": [{"test": "index-tests", "covers": ["derived-index"], "obligation": "self", "command": {"argv": ["python3", "-m", "pytest", "tests", "-q"]}}]
+  }
+}
