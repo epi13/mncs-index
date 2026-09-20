@@ -25,6 +25,8 @@ EXTRACT_SRC = "extract.mncs"
 EXTRACT_MOD = "mncs.index.extract.v1"
 GRAPH_SRC = "graph.mncs"
 GRAPH_MOD = "mncs.index.graph.v1"
+STORE_FEED_SRC = "store_feed.mncs"
+STORE_FEED_MOD = "mncs.index.store_feed.v1"
 
 MASK64 = (1 << 64) - 1
 FNV_BASIS = 14695981039346656037
@@ -284,6 +286,23 @@ class Kernels:
                 boolean(new_present),
                 u64(new_digest),
             ],
+        )
+
+    # -- store_feed.v1 -----------------------------------------------------
+    def store_through_generation(self, index_generation: int, store_generation: int) -> int:
+        return self.b.call_u64(
+            STORE_FEED_SRC,
+            STORE_FEED_MOD,
+            "through_generation",
+            [u64(index_generation), u64(store_generation)],
+        )
+
+    def store_complete(self, index_generation: int, store_generation: int) -> bool:
+        return self.b.call_bool(
+            STORE_FEED_SRC,
+            STORE_FEED_MOD,
+            "complete",
+            [u64(index_generation), u64(store_generation)],
         )
 
     # -- extract.v1 ---------------------------------------------------------

@@ -1,0 +1,18 @@
+{
+  "schema_version": "commons.mncs.family-verification-checks/v1",
+  "repository_id": "mncs-index",
+  "checks": [
+    {
+      "identity": "mncs-index:store-state-input",
+      "contract_identity": "mncs.store.persistent-state/1",
+      "runner": "declaration",
+      "surface": "store-generation-to-derived-index"
+    },
+    {
+      "identity": "mncs-index:pressure-input",
+      "contract_identity": "mncs.pressure-registry/1",
+      "runner": "declaration",
+      "surface": "pressure-authority-to-index-projection"
+    }
+  ]
+}

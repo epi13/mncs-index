@@ -1,0 +1,17 @@
+{
+  "schema_version": "mncs.native-userland-audit/1",
+  "repository_id": "mncs-index",
+  "profile_revalidation": {
+    "historical_source_profiles": ["0.8", "0.10"],
+    "minimum_profile_required_by_current_sources": "0.13",
+    "current_family_compatibility": "0.18",
+    "reason": "The new Store-feed freshness kernel uses only Profile 0.13 semantics. Existing lower-profile kernels remain frozen; the compatibility ceiling is not a blanket source rewrite."
+  },
+  "pressure_reclassification": [
+    {"legacy": "PRESS-004/PRESS-006", "status": "still_real", "note": "Index-specific digest and canonical projection work remains; Store now owns canonical durable identity for the new relation path."},
+    {"legacy": "PRESS-008/PRESS-009", "status": "reframed", "note": "The old Python Store remains a reference path; new Store-backed projection state is disposable and generation-tagged."},
+    {"legacy": "PRESS-015", "status": "partially_resolved", "note": "Store relations are now first-class inputs; corpus-scale traversal and query ordering remain Index responsibilities."},
+    {"legacy": "expensive broad test tail", "status": "reframed", "note": "Store projection is an ordinary focused obligation; scale/stress/legacy persistence suites are explicitly scheduled."
+    }
+  ]
+}

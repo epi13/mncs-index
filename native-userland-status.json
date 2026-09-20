@@ -1,0 +1,20 @@
+{
+  "schema_version": "mncs.native-userland-status/1",
+  "repository_id": "mncs-index",
+  "status": "derived_native_kernel_with_store_projection_adapter",
+  "canonical_entrypoint": "DerivedStoreIndex over Store commit-feed and typed relation records",
+  "native_sources": {
+    "store_generation_freshness": "src/store_feed.mncs",
+    "existing_discovery_and_query_kernels": "src/*.mncs"
+  },
+  "derived_only_surfaces": [
+    "runner/mncs_index/store_feed.py::DerivedStoreIndex",
+    "runner/mncs_index/query.py query structures"
+  ],
+  "migration_shadow": {
+    "path": "runner/mncs_index/store.py",
+    "status": "legacy_reference_persistence_driver",
+    "policy": "do not extend as a competing canonical Store; parity and cutover remain scheduled"
+  },
+  "next_migration_slice": "route Index publication and MVCC snapshots through mncs-store after the Store feed adapter is wired to a live Store instance"
+}

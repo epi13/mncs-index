@@ -1,0 +1,31 @@
+{
+  "schema_version": "mncs-family.verification-obligation-inventory/v1",
+  "repository": "mncs-index",
+  "revision": 2,
+  "obligations": [
+    {
+      "identity": "mncs-index.store-projection.rebuild",
+      "title": "Derived Index relations rebuild deterministically from Store records",
+      "guarantee_domain": "family_contract",
+      "evidence_role": "conformance",
+      "lifecycle": "permanent",
+      "scope": "consumer",
+      "subjects": ["mncs.store.persistent-state/1", "mncs.index.derived-index/1"],
+      "invalidation_dependencies": ["src/store_feed.mncs", "runner/mncs_index/store_feed.py", "tests/test_store_projection.py"],
+      "executor": {"provider": "mncs-index", "kind": "native_first_class_test", "entrypoint": "tests/test_store_projection.py::test_destroy_and_rebuild_preserves_typed_query_result"},
+      "evidence_identity": {"subject_fields": ["store_generation", "relation_identity"], "definition_fields": ["projection_identity"], "execution_fields": ["query_result_identity"]}
+    },
+    {
+      "identity": "mncs-index.store-projection.freshness",
+      "title": "Every Store-backed query exposes whether the Index covers the Store generation",
+      "guarantee_domain": "family_contract",
+      "evidence_role": "canonical_regression",
+      "lifecycle": "permanent",
+      "scope": "family",
+      "subjects": ["mncs.index.derived-index/1"],
+      "invalidation_dependencies": ["src/store_feed.mncs", "runner/mncs_index/kernels.py"],
+      "executor": {"provider": "mncs-index", "kind": "compile_experiment", "entrypoint": "tests/test_store_projection.py::test_store_feed_kernel_agrees_with_projection"},
+      "evidence_identity": {"subject_fields": ["store_generation", "index_through_generation"], "definition_fields": ["freshness_policy_identity"], "execution_fields": ["completeness_evidence_identity"]}
+    }
+  ]
+}

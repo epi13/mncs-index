@@ -1,0 +1,27 @@
+mncs 0.13;
+
+// mncs.index.store_feed.v1 — freshness and admission policy for the Store
+// commit feed.
+//
+// 0 = complete (index through Store generation), 1 = stale/incomplete,
+// 2 = impossible future index. The canonical objects remain in Store;
+// Index only derives query structures from the feed and typed relations.
+module mncs.index.store_feed.v1;
+
+fn through_generation(index_generation: u64, store_generation: u64) -> (result: u64) {
+    if index_generation == store_generation { return 0; }
+    if index_generation < store_generation { return 1; }
+    return 2;
+}
+
+fn complete(index_generation: u64, store_generation: u64) -> (result: bool) {
+    return through_generation(index_generation, store_generation) == 0;
+}
+
+fn relation_kind_valid(kind: u64) -> (result: bool) {
+    return kind >= 1 && kind <= 4;
+}
+
+fn query_admit(index_generation: u64, store_generation: u64, requested_limit: u64) -> (result: bool) {
+    return complete(index_generation, store_generation) && requested_limit > 0;
+}

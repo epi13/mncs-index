@@ -1,12 +1,15 @@
 {
   "schema_version": "mncs-family.repository-manifest/v0alpha1",
   "repository": "mncs-index",
-  "revision": 1,
+  "revision": 2,
   "manifest_location": "in-repository",
   "authority": {"note": "Index owns derived discovery, ranking, relation, traversal, and deterministic query structures."},
   "contracts": {
-    "provides": [{"contract": "derived-index", "version": "1", "kind": "query-contract", "stability": "experimental", "fingerprint_sources": ["src/", "runner/"]}],
-    "consumes": [{"contract": "mncs-language.source-profile", "envelope": {"op": "compatible-minor", "version": "0.16"}, "required": true, "evidence_refs": ["tests/test_kernels.py"]}],
-    "tests": [{"test": "index-tests", "covers": ["derived-index"], "obligation": "self", "command": {"argv": ["python3", "-m", "pytest", "tests", "-q"]}}]
+    "provides": [
+      {"contract": "derived-index", "version": "2", "kind": "query-contract", "stability": "experimental", "fingerprint_sources": ["src/", "runner/mncs_index/store_feed.py"]},
+      {"contract": "store-feed-projection", "version": "1", "kind": "query-contract", "stability": "experimental", "fingerprint_sources": ["src/store_feed.mncs", "runner/mncs_index/store_feed.py"]}
+    ],
+    "consumes": [{"contract": "mncs-language.source-profile", "envelope": {"op": "compatible-minor", "version": "0.13", "compatibility_ceiling": "0.18"}, "required": true, "evidence_refs": ["src/store_feed.mncs", "tests/test_store_projection.py"]}, {"contract": "mncs.store.persistent-state/1", "envelope": {"op": "exact", "version": "1"}, "required": true, "evidence_refs": ["runner/mncs_index/store_feed.py"]}],
+    "tests": [{"test": "store-projection", "covers": ["derived-index", "store-feed-projection"], "obligation": "self", "command": {"argv": ["python3", "-m", "pytest", "tests/test_store_projection.py", "-q"]}}, {"test": "index-tests", "covers": ["derived-index"], "obligation": "scheduled", "command": {"argv": ["python3", "-m", "pytest", "tests", "-q"]}}]
   }
 }
