@@ -3,9 +3,11 @@
 `mncs-index` exists partly to answer a hard question: can MNCS express and efficiently execute a serious, highly concurrent systems workload without escaping into another language?
 
 > First-pass answer (2026-09): MNCS expresses the pure deterministic core
-> well (four Profile-0.8 kernels, all semantic decisions in-language), but
+> well (six kernels, with the hashing kernels now reusing a generic bounded
+> FNV-1a stdlib fold), but
 > cannot express threads, channels, filesystem effects, watching, clocks,
-> crypto digests, unbounded text, or economical invocation. The grounded
+> economical in-kernel cryptographic digests (only a verify-only SHA-256
+> path exists), unbounded text, or economical invocation. The grounded
 > ledger is `pressure/registry.md` (12 entries, 3 minimal reproducers).
 
 > Slice-7 consolidation (2026-09-08, `index/phase3-systems`): all

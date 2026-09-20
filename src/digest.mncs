@@ -1,4 +1,4 @@
-mncs 0.8;
+mncs 0.10;
 
 // mncs.index.digest.v2 — content digests for the deterministic index.
 //
@@ -17,26 +17,24 @@ mncs 0.8;
 //   single window (or empty input) digests to its leaf directly.
 module mncs.index.digest.v2;
 
+use mncs.std.fnv1a.v1;
+
 // FNV offset basis: the digest of the empty input.
 fn empty_digest() -> (result: u64) {
-    return 14695981039346656037;
+    return offset_basis();
 }
 
 // FNV-1a fold step over a single byte. The xor is language-owned semantics,
 // not a host-side substitute.
 fn mix_step(state: u64, b: byte) -> (result: u64) {
-    return (state ^ (b as u64)) *% 1099511628211;
+    return step(state, b);
 }
 
 // Pure sequential fold step over a window (no stats): used to fingerprint
 // the canonical byte stream itself, so the canonical digest is also an
 // MNCS-computed value alongside the host-side SHA-256 cross-check.
 fn fold_window(state: u64, chunk: [byte; up_to 64], length: u64) -> (result: u64) {
-    iterate i over chunk carrying h: u64 = state {
-        let live: bool = i < length;
-        next h = select(live, mix_step(h, chunk[i]), h);
-    }
-    return h;
+    return fold<64>(state, chunk, length);
 }
 
 // Fold one window of bytes into a running state. Calling with

@@ -15,13 +15,18 @@ express; every such effect maps to a `pressure/` entry.
 | `extract.mncs` | `mncs.index.extract.v1` | Decl keywords, heading levels, link seams, PRESS/RFC token shapes |
 | `graph.mncs` | `mncs.index.graph.v1` | Bounded traversal verdicts (`should_visit`, `depth_next`); adjacency/identity/order stay host-side (PRESS-015) |
 
-All kernels target Source Profile 0.8, are dependency-free (no `use`
-imports, so `mncs execute` needs no library search path), and elaborate
-with zero `MNE`/`MNB`/`MNP` errors:
+The four non-hashing kernels target Source Profile 0.8 and remain
+dependency-free. `digest.mncs` and `scan.mncs` target Source Profile 0.10
+so they can instantiate the generic `mncs.std.fnv1a.v1` bounded fold.
+Those two kernels therefore need the standard-library search path when
+studied or executed:
 
 ```bash
-mncs source-study src/digest.mncs --node-id local
+MNCS_LIBRARY_PATH=../mncs-language/library \
+  mncs source-study src/digest.mncs --node-id local
 ```
+
+All kernels elaborate with zero `MNE`/`MNB`/`MNP` errors.
 
 Each kernel function is pinned by `tests/test_kernels.py` and
 cross-checked against independent oracles on seeded random inputs by

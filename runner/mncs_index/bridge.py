@@ -106,6 +106,7 @@ class Bridge:
         self,
         binary: str | None = None,
         src_dir: str | None = None,
+        library_dir: str | None = None,
         step_budget: int = 100000,
         timeout_s: float = 60.0,
     ):
@@ -114,6 +115,15 @@ class Bridge:
             here = os.path.dirname(os.path.abspath(__file__))
             src_dir = os.path.normpath(os.path.join(here, "..", "..", "src"))
         self.src_dir = src_dir
+        if library_dir is None:
+            library_dir = os.environ.get("MNCS_LIBRARY_PATH")
+        if library_dir is None:
+            sibling = os.path.normpath(
+                os.path.join(self.src_dir, "..", "..", "mncs-language", "library")
+            )
+            if os.path.isdir(sibling):
+                library_dir = sibling
+        self.library_dir = library_dir
         self.step_budget = step_budget
         self.timeout_s = timeout_s
         self.stats = BridgeStats()
@@ -148,6 +158,9 @@ class Bridge:
             ) as req_file:
                 json.dump(request, req_file)
                 req_file.flush()
+                environment = dict(os.environ)
+                if self.library_dir is not None:
+                    environment["MNCS_LIBRARY_PATH"] = self.library_dir
                 try:
                     proc = subprocess.run(
                         [
@@ -159,6 +172,7 @@ class Bridge:
                         capture_output=True,
                         check=False,
                         text=True,
+                        env=environment,
                         timeout=self.timeout_s,
                     )
                 except subprocess.TimeoutExpired as exc:

@@ -1,4 +1,4 @@
-mncs 0.8;
+mncs 0.10;
 
 // mncs.index.scan.v2 — byte classification and symbol-token validation.
 //
@@ -9,6 +9,8 @@ mncs 0.8;
 // candidate token is a well-formed symbol (`[A-Za-z_][A-Za-z0-9_]*`,
 // length 1..32).
 module mncs.index.scan.v2;
+
+use mncs.std.fnv1a.v1;
 
 // 0 = other, 1 = newline (\n), 2 = horizontal/other space, 3 = symbol char.
 fn classify_byte(b: byte) -> (result: u64) {
@@ -73,13 +75,7 @@ fn is_symbol_token(tok: [byte; up_to 32], length: u64) -> (result: bool) {
 // FNV-1a digest of a token (same step as digest.v2, so token identity and
 // content identity share one fold definition).
 fn token_digest(tok: [byte; up_to 32], length: u64) -> (result: u64) {
-    iterate i over tok carrying h: u64 = 14695981039346656037 {
-        let live: bool = i < length;
-        let xored: u64 = h ^ (select(live, tok[i] as u64, 0));
-        let mulled: u64 = select(live, xored *% 1099511628211, h);
-        next h = select(live, mulled, h);
-    }
-    return h;
+    return fold<32>(offset_basis(), tok, length);
 }
 
 // Batch validation of up to 8 candidate tokens; bit k of the result is 1
