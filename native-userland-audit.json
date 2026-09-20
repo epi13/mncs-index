@@ -8,8 +8,10 @@
     "reason": "The new Store-feed freshness kernel uses only Profile 0.13 semantics. Existing lower-profile kernels remain frozen; the compatibility ceiling is not a blanket source rewrite."
   },
   "pressure_reclassification": [
-    {"legacy": "PRESS-004/PRESS-006", "status": "still_real", "note": "Index-specific digest and canonical projection work remains; Store now owns canonical durable identity for the new relation path."},
-    {"legacy": "PRESS-008/PRESS-009", "status": "reframed", "note": "The old Python Store remains a reference path; new Store-backed projection state is disposable and generation-tagged."},
+    {"legacy": "PRESS-004", "status": "resolved_upstream", "note": "Profile 0.18 integer bitwise operators and the prior digest/scan consumer cutover are already covered by the family pressure evidence; the 0.8 reproducer remains only as historical compatibility evidence."},
+    {"legacy": "PRESS-006", "status": "still_real", "note": "Index-specific cryptographic digest and canonical projection work remains; Store now owns canonical durable identity for the new relation path."},
+    {"legacy": "PRESS-008", "status": "still_real", "note": "Concurrent error aggregation/cancellation remains outside the Store projection scope and is not silently relabeled as resolved."},
+    {"legacy": "PRESS-009", "status": "reframed", "note": "Two-level nested iteration is available from Profile 0.11; the 0.8 negative reproducer remains pinned as historical evidence and does not require rewriting the frozen Index kernels."},
     {"legacy": "PRESS-015", "status": "partially_resolved", "note": "Store relations are now first-class inputs; corpus-scale traversal and query ordering remain Index responsibilities."},
     {"legacy": "expensive broad test tail", "status": "reframed", "note": "Store projection is an ordinary focused obligation; scale/stress/legacy persistence suites are explicitly scheduled."
     }
