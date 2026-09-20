@@ -1,6 +1,6 @@
 mncs 0.8;
 
-// mncs.index.scan.v1 — byte classification and symbol-token validation.
+// mncs.index.scan.v2 — byte classification and symbol-token validation.
 //
 // The host splits file bytes into tokens on `classify_byte` class-3
 // boundaries (unbounded splitting is host-side plumbing; see
@@ -8,7 +8,7 @@ mncs 0.8;
 // which bytes are spaces, newlines, or symbol characters, and whether a
 // candidate token is a well-formed symbol (`[A-Za-z_][A-Za-z0-9_]*`,
 // length 1..32).
-module mncs.index.scan.v1;
+module mncs.index.scan.v2;
 
 // 0 = other, 1 = newline (\n), 2 = horizontal/other space, 3 = symbol char.
 fn classify_byte(b: byte) -> (result: u64) {
@@ -70,14 +70,14 @@ fn is_symbol_token(tok: [byte; up_to 32], length: u64) -> (result: bool) {
     return ok;
 }
 
-// FNV-inspired xor-free digest of a token (same step as digest.v1, so
-// token identity and content identity share one fold definition).
+// FNV-1a digest of a token (same step as digest.v2, so token identity and
+// content identity share one fold definition).
 fn token_digest(tok: [byte; up_to 32], length: u64) -> (result: u64) {
     iterate i over tok carrying h: u64 = 14695981039346656037 {
         let live: bool = i < length;
-        let added: u64 = h +% select(live, tok[i] as u64, 0);
-        let mulled: u64 = select(live, added *% 1099511628211, h);
-        next h = select(live, mulled +% (mulled >> 29), h);
+        let xored: u64 = h ^ (select(live, tok[i] as u64, 0));
+        let mulled: u64 = select(live, xored *% 1099511628211, h);
+        next h = select(live, mulled, h);
     }
     return h;
 }

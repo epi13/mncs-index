@@ -122,8 +122,9 @@ against the kernel, never trusted silently.
 
 Twelve grounded entries: `pressure/registry.md`, plus minimal MNCS
 reproducers under `pressure/reproducers/`. Highest-priority next language
-work: in-process/batch kernel invocation (PRESS-010), integer bitwise ops
-(PRESS-004), `u64` traversal domains (PRESS-005), crypto digests (PRESS-006).
+work: in-process/batch kernel invocation (PRESS-010), `u64` traversal
+domains (PRESS-005), crypto digests (PRESS-006), and the remaining
+filesystem/concurrency effects.
 
 ## Layout
 

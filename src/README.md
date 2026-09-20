@@ -8,8 +8,8 @@ express; every such effect maps to a `pressure/` entry.
 
 | File | Module | Decides |
 |------|--------|---------|
-| `digest.mncs` | `mncs.index.digest.v1` | Content folds, Merkle leaves/combines, canonical-bytes fold |
-| `scan.mncs` | `mncs.index.scan.v1` | Byte classes, symbol validation, token digests, batch validation |
+| `digest.mncs` | `mncs.index.digest.v2` | FNV-1a content folds, Merkle leaves/combines, canonical-bytes fold |
+| `scan.mncs` | `mncs.index.scan.v2` | Byte classes, symbol validation, FNV-1a token digests, batch validation |
 | `kind.mncs` | `mncs.index.kind.v1` | Extension bytes to canonical kind rank |
 | `order.mncs` | `mncs.index.order.v1` | Lexicographic compare, record order, query match, change verdicts |
 | `extract.mncs` | `mncs.index.extract.v1` | Decl keywords, heading levels, link seams, PRESS/RFC token shapes |
@@ -29,9 +29,9 @@ cross-checked against independent oracles on seeded random inputs by
 
 ## Algorithm notes (frozen)
 
-- Digest fold: xor-free multiply-add/shift (`mix_step`), because integer
-  bitwise ops do not exist (PRESS-004). FNV offset basis and prime are
-  reused as constants, but the function is **not** FNV-1a.
+- Digest fold: standard FNV-1a (`mix_step`) using MNCS integer bitwise
+  operators. The former xor-free compatibility fold was retired after
+  PRESS-004 was resolved upstream.
 - File digest: canonical binary Merkle tree over ordered 64-byte leaves;
   odd tails pair with `0`; empty files digest to the basis. Levels are
   sequential, pairs within a level run concurrently with index-placed

@@ -1,14 +1,13 @@
 mncs 0.8;
 
-// mncs.index.digest.v1 — content digests for the deterministic index.
+// mncs.index.digest.v2 — content digests for the deterministic index.
 //
 // Design notes (see also pressure/PRESS-004):
-// - Integer bitwise operators (`^`, `&`, `|`) exist only for `byte`, not
-//   for integer types, so the classic FNV-1a xor-fold is inexpressible.
-//   This module therefore defines an explicitly xor-free fold:
-//   multiply-add with the FNV prime plus a shift-add avalanche term.
-//   It is NOT FNV-1a and is not named as such. Correctness here means
-//   determinism and order-sensitivity, both pinned by execution corpora.
+// - Integer bitwise operators are now available over the full integer
+//   domain. The index therefore uses the standard FNV-1a xor-fold rather
+//   than carrying the former xor-free compatibility algorithm.
+// - Tree reduction remains index-owned and order-sensitive; only the leaf
+//   byte fold changed when the language capability became available.
 // - All arithmetic is wrapping (`+%`, `*%`); shifts on `u64` are logical.
 // - `u64` sequences cannot be `iterate` domains (MNB101), so windows are
 //   `[byte; up_to 64]` and each call folds at most 64 bytes.
@@ -16,18 +15,17 @@ mncs 0.8;
 //   parallel shape: leaves fold disjoint windows independently, levels
 //   combine pairwise in file order, an odd tail pairs with PAD 0, and a
 //   single window (or empty input) digests to its leaf directly.
-module mncs.index.digest.v1;
+module mncs.index.digest.v2;
 
 // FNV offset basis: the digest of the empty input.
 fn empty_digest() -> (result: u64) {
     return 14695981039346656037;
 }
 
-// One xor-free fold step over a single byte.
+// FNV-1a fold step over a single byte. The xor is language-owned semantics,
+// not a host-side substitute.
 fn mix_step(state: u64, b: byte) -> (result: u64) {
-    let added: u64 = state +% (b as u64);
-    let mulled: u64 = added *% 1099511628211;
-    return mulled +% (mulled >> 29);
+    return (state ^ (b as u64)) *% 1099511628211;
 }
 
 // Pure sequential fold step over a window (no stats): used to fingerprint

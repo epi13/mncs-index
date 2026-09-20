@@ -19,8 +19,9 @@ significant item, all recorded in the registry).
 | PRESS-004 (P2) integer bitwise ops | stage-b1: `^ & \|` total over all 8 widths | `xor_u64(12,10)=6`, `and_u64=8`, `or_u64=14`; `test_int_bitwise_u64_fixed_slice7` |
 | PRESS-009 (P3) nested `iterate` | profile 0.11: two-level nests, distinct identities | 0.8 still MNE147 (pinned); 0.11 executes; `test_nested_two_level_profile011_slice7` |
 
-Kernels stay as-is (valid on every profile); FNV-style folds and
-two-dimensional scans are now available to future kernels.
+The index has now adopted the FNV-1a capability: `digest.v2` and
+`scan.v2` use integer xor directly, and the old xor-free fold is no longer
+part of ordinary execution. Two-dimensional scans remain future work.
 
 ## Tier A — architectural (a whole subsystem stays host-side until this lands)
 
@@ -165,7 +166,8 @@ sub-0.11 profiles still refuse by design.
 | 018 | retention strings, `os.unlink` reclamation | `store.py` (`compact`) |
 | 007 | polling loop, quiet-period coalescing, `validate_every` | `watch.py` |
 | 019 | (none — not faked) local-only assumption | pipeline/merge |
-| 004/009 | (none — workaround retained deliberately) | `digest.mncs` fold, factored loops |
+| 004 | xor-free digest/token workaround and its compatibility comments | `src/digest.mncs`, `src/scan.mncs` |
+| 009 | (none — factored loops remain deliberate) | `digest.mncs` fold, factored loops |
 
 ## Pressure dependencies
 

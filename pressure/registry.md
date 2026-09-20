@@ -11,7 +11,7 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 | PRESS-001 | P0 | concurrency | No task spawning, threads, pools, or structured concurrency (lifecycle vocabulary confirmed usable, execution parallelism still absent) | Host `ThreadPoolExecutor` pipeline | `reproducers/probe-task-lifecycle.mncs` + `tests/test_language_probes.py` |
 | PRESS-002 | P0 | synchronization | No channels, bounded queues, mutexes, atomics, close semantics (confirmed; task.v1 gives cooperative hand-off vocabulary only) | Host `queue.Queue` + locks + drain protocol | `tests/test_concurrent_read.py` (bounded queues, saturation, blocked-reader cancel) + `tests/test_failure.py` + `tests/test_language_probes.py` |
 | PRESS-003 | P0 | filesystem | No traversal/watch effects in MNCS; bounded single-blob `host_read` partially available via grant-gated experiment path | Host discovery/read/polling | `reproducers/probe-host-read.mncs` + corpus/grant + `tests/test_language_probes.py` |
-| PRESS-004 | P2 — RESOLVED upstream (slice 7) | language semantics | Integer bitwise ops (`^ & \|`) missing; FNV-1a inexpressible | Xor-free MNCS fold (documented, not FNV) | `reproducers/int-bitwise-xor.mncs` (former MNE103, now executes) |
+| PRESS-004 | P2 — RESOLVED upstream and adopted | language semantics | Integer bitwise ops (`^ & \|`) missing; FNV-1a inexpressible | FNV-1a MNCS fold (`digest.v2`/`scan.v2`) | `reproducers/int-bitwise-xor.mncs` + `tests/test_language_probes.py::test_int_bitwise_u64_fixed_slice7` |
 | PRESS-005 | P2 | collections/stdlib | `u64` sequences rejected as `iterate` domains (MNB101); unbounded strings/sort/split absent | 64 B windows; host scale-out differentially tested | `reproducers/traversal-u64-domain.mncs` (MNB101) |
 | PRESS-006 | P1 | hashing | Verify-only `sha256_digest` partially available via grant-gated experiment path (views ≤64 B, per-invocation compile); no in-kernel digest | MNCS fold + host SHA-256 cross-check | `reproducers/probe-sha256-abc.mncs` (NIST "abc" vector) + `tests/test_language_probes.py` |
 | PRESS-007 | P1 | watch/time | `clock_read` partially available via grant-gated experiment path (relational use only); still no filesystem watching | Polling watcher + host timing | `reproducers/probe-clock.mncs` + corpus + `tests/test_language_probes.py` |
@@ -185,11 +185,10 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
 - Desired: integer `& | ^` (wrapping/total, like shifts) or a documented
   reason for their absence.
 - Why needed: standard content folds (FNV-1a xor-fold, splitmix-style
-  mixers, hash combining) are inexpressible; `src/digest.mncs` defines an
-  explicitly xor-free multiply-add/shift fold instead. The algorithm is
-  deterministic and order-sensitive (pinned by
-  `tests/test_differential.py`), but it is not the standard, well-studied
-  function and cannot cite its analysis.
+  mixers, hash combining) were inexpressible; `src/digest.mncs` defined an
+  explicitly xor-free multiply-add/shift fold instead. The algorithm was
+  deterministic and order-sensitive, but it was not the standard,
+  well-studied function and could not cite its analysis.
 - Cost: algorithm substitution in a hashing core; mild avalanche loss.
 - Classification: compiler/frontend (operator typing).
 - Slice-7 verdict 2026-09-08 (`index/phase3-systems`): **RESOLVED
@@ -200,9 +199,10 @@ RFC 0026 (persistence) `NONE` (`docs/rfc-conformance.md` in mncs-language).
   (`mncs 0.1.0`): `xor_u64(12,10)` returns 6, `and_u64` returns 8,
   `or_u64` returns 14 (`steps: 2`, `status: returned`). The
   reproducer keeps its 0.8 header — the fix applies to existing
-  profiles, not a new one. mncs-index keeps the xor-free fold in
-  `src/digest.mncs` (pinned by `tests/test_differential.py`; no
-  behavior change needed), but FNV-1a-style folds are now expressible.
+  profiles, not a new one. mncs-index now adopts the capability in
+  `src/digest.mncs` (`mncs.index.digest.v2`) and `src/scan.mncs`
+  (`mncs.index.scan.v2`); `tests/test_differential.py` pins the new
+  FNV-1a contract.
 - Acceptance-test-after-language-fix (executable):
   `tests/test_language_probes.py::test_int_bitwise_u64_fixed_slice7`
   (all three ops, exact values).

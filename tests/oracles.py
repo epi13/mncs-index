@@ -14,9 +14,7 @@ COMBINE_C2 = 16777619
 
 
 def mix_step(state: int, b: int) -> int:
-    added = (state + b) & MASK64
-    mulled = (added * FNV_PRIME) & MASK64
-    return (mulled + (mulled >> 29)) & MASK64
+    return ((state ^ b) * FNV_PRIME) & MASK64
 
 
 def fold_window(state: int, chunk: bytes) -> int:
