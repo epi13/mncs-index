@@ -55,7 +55,7 @@ def test_unreadable_file_fails_discovery(kernels, workdir):
 
 def test_mncs_error_propagates_typed(kernels):
     with pytest.raises(MNCSError):
-        kernels.b.call("digest.mncs", "mncs.index.digest.v2", "no_such_fn", [])
+        kernels.b.call("digest.mncs", "mncs.index.digest", "no_such_fn", [])
 
 
 def test_starved_budget_fails_build(binary, workdir):
