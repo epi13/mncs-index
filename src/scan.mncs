@@ -1,6 +1,6 @@
 mncs 0.10;
 
-// mncs.index.scan.v2 — byte classification and symbol-token validation.
+// mncs.index.scan — byte classification and symbol-token validation.
 //
 // The host splits file bytes into tokens on `classify_byte` class-3
 // boundaries (unbounded splitting is host-side plumbing; see
@@ -8,7 +8,7 @@ mncs 0.10;
 // which bytes are spaces, newlines, or symbol characters, and whether a
 // candidate token is a well-formed symbol (`[A-Za-z_][A-Za-z0-9_]*`,
 // length 1..32).
-module mncs.index.scan.v2;
+module mncs.index.scan;
 
 use mncs.std.fnv1a.v1;
 
@@ -72,7 +72,7 @@ fn is_symbol_token(tok: [byte; up_to 32], length: u64) -> (result: bool) {
     return ok;
 }
 
-// FNV-1a digest of a token (same step as digest.v2, so token identity and
+// FNV-1a digest of a token (same step as digest, so token identity and
 // content identity share one fold definition).
 fn token_digest(tok: [byte; up_to 32], length: u64) -> (result: u64) {
     return fold<32>(offset_basis(), tok, length);

@@ -11,6 +11,10 @@ import pytest
 
 
 def test_empty_digest_is_basis(kernels):
+    from mncs_index.kernels import DIGEST_MOD, SCAN_MOD
+
+    assert DIGEST_MOD == "mncs.index.digest"
+    assert SCAN_MOD == "mncs.index.scan"
     assert kernels.empty_digest() == oracles.FNV_BASIS == 14695981039346656037
 
 

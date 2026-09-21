@@ -3,7 +3,7 @@ mncs 0.8;
 // PRESS-004 historical reproducer: integer bitwise operators were once
 // unavailable. The current Profile 0.18 toolchain accepts all three u64
 // operators; the source header remains 0.8 to prove the fix applies without
-// a profile bump. mncs-index now consumes the capability in digest.v2/scan.v2.
+// a profile bump. mncs-index now consumes the capability in digest/scan.
 module pressure.int_bitwise;
 
 fn xor_u64(a: u64, b: u64) -> (result: u64) {

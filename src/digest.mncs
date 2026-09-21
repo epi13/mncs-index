@@ -1,6 +1,6 @@
 mncs 0.10;
 
-// mncs.index.digest.v2 — content digests for the deterministic index.
+// mncs.index.digest — content digests for the deterministic index.
 //
 // Design notes (see also pressure/PRESS-004):
 // - Integer bitwise operators are now available over the full integer
@@ -15,7 +15,7 @@ mncs 0.10;
 //   parallel shape: leaves fold disjoint windows independently, levels
 //   combine pairwise in file order, an odd tail pairs with PAD 0, and a
 //   single window (or empty input) digests to its leaf directly.
-module mncs.index.digest.v2;
+module mncs.index.digest;
 
 use mncs.std.fnv1a.v1;
 

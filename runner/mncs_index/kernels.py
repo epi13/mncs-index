@@ -14,9 +14,9 @@ from .bridge import Bridge, boolean, seq_bytes, u64
 from .bridge import byte as byte_enc
 
 DIGEST_SRC = "digest.mncs"
-DIGEST_MOD = "mncs.index.digest.v2"
+DIGEST_MOD = "mncs.index.digest"
 SCAN_SRC = "scan.mncs"
-SCAN_MOD = "mncs.index.scan.v2"
+SCAN_MOD = "mncs.index.scan"
 KIND_SRC = "kind.mncs"
 KIND_MOD = "mncs.index.kind.v1"
 ORDER_SRC = "order.mncs"
@@ -67,7 +67,7 @@ class Kernels:
         self._press: dict[bytes, bool] = {}
         self._rfc: dict[bytes, int] = {}
 
-    # -- digest.v2 ------------------------------------------------------
+    # -- digest ---------------------------------------------------------
     def empty_digest(self) -> int:
         return self.b.call_u64(DIGEST_SRC, DIGEST_MOD, "empty_digest", [])
 
@@ -126,7 +126,7 @@ class Kernels:
             leaves = list(pool.map(lambda c: self.fold_window(FNV_BASIS, c), chunks))
         return self.tree_combine(leaves, workers)
 
-    # -- scan.v2 ----------------------------------------------------------
+    # -- scan ------------------------------------------------------------
     def byte_class(self, value: int) -> int:
         with self._lock:
             hit = self._byte_class.get(value)

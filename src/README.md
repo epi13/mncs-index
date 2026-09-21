@@ -8,8 +8,8 @@ express; every such effect maps to a `pressure/` entry.
 
 | File | Module | Decides |
 |------|--------|---------|
-| `digest.mncs` | `mncs.index.digest.v2` | FNV-1a content folds, Merkle leaves/combines, canonical-bytes fold |
-| `scan.mncs` | `mncs.index.scan.v2` | Byte classes, symbol validation, FNV-1a token digests, batch validation |
+| `digest.mncs` | `mncs.index.digest` | FNV-1a content folds, Merkle leaves/combines, canonical-bytes fold |
+| `scan.mncs` | `mncs.index.scan` | Byte classes, symbol validation, FNV-1a token digests, batch validation |
 | `kind.mncs` | `mncs.index.kind.v1` | Extension bytes to canonical kind rank |
 | `order.mncs` | `mncs.index.order.v1` | Lexicographic compare, record order, query match, change verdicts |
 | `extract.mncs` | `mncs.index.extract.v1` | Decl keywords, heading levels, link seams, PRESS/RFC token shapes |

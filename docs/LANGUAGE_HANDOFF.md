@@ -19,8 +19,8 @@ significant item, all recorded in the registry).
 | PRESS-004 (P2) integer bitwise ops | stage-b1: `^ & \|` total over all 8 widths | `xor_u64(12,10)=6`, `and_u64=8`, `or_u64=14`; `test_int_bitwise_u64_fixed_slice7` |
 | PRESS-009 (P3) nested `iterate` | profile 0.11: two-level nests, distinct identities | 0.8 still MNE147 (pinned); 0.11 executes; `test_nested_two_level_profile011_slice7` |
 
-The index has now adopted the FNV-1a capability: `digest.v2` and
-`scan.v2` instantiate the shared bounded `mncs.std.fnv1a.v1` fold, so
+The index has now adopted the FNV-1a capability: the canonical `digest` and
+`scan` modules instantiate the shared bounded `mncs.std.fnv1a.v1` fold, so
 integer xor is canonical and the old xor-free fold is no longer part of
 ordinary execution. Two-dimensional scans remain future work.
 
