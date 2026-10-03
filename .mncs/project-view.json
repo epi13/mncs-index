@@ -1,0 +1,58 @@
+{
+  "capabilities": [
+    {
+      "contract": "derived-index",
+      "fingerprint_sources": [
+        "src/",
+        "runner/mncs_index/store_feed.py"
+      ],
+      "kind": "query-contract",
+      "stability": "experimental",
+      "version": "2"
+    },
+    {
+      "contract": "store-feed-projection",
+      "fingerprint_sources": [
+        "src/store_feed.mncs",
+        "runner/mncs_index/store_feed.py"
+      ],
+      "kind": "query-contract",
+      "stability": "experimental",
+      "version": "1"
+    }
+  ],
+  "dependencies": [
+    {
+      "contract": "mncs-language.source-profile",
+      "envelope": {
+        "compatibility_ceiling": "0.18",
+        "op": "compatible-minor",
+        "version": "0.13"
+      },
+      "evidence_refs": [
+        "src/store_feed.mncs",
+        "tests/test_store_projection.py"
+      ],
+      "required": true
+    },
+    {
+      "contract": "mncs.store.persistent-state/1",
+      "envelope": {
+        "op": "exact",
+        "version": "1"
+      },
+      "evidence_refs": [
+        "runner/mncs_index/store_feed.py"
+      ],
+      "required": true
+    }
+  ],
+  "entry": [
+    "python3 -m pytest tests -q"
+  ],
+  "purpose": "A machine-native, highly concurrent indexing and query engine for the MNCS ecosystem, providing deterministic incremental indexing across source code, RFCs, artifacts, tests, diagnostics, and project metadata.",
+  "repository": "mncs-index",
+  "schema_version": "mncs.project-view/1",
+  "source_identity": "sha256:645af5f210646efb50c99119ab22c173cf436798f4fd792f01a9e4b1efac6f89",
+  "structure": {}
+}

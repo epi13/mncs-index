@@ -1,6 +1,20 @@
 # mncs-index
 
 <!-- MNCS:generated:begin -->
+## Project entry
+
+A machine-native, highly concurrent indexing and query engine for the MNCS ecosystem, providing deterministic incremental indexing across source code, RFCs, artifacts, tests, diagnostics, and project metadata.
+
+```bash
+python3 -m pytest tests -q
+```
+
+Declared capabilities (declarations do not establish execution health):
+
+- `derived-index/2` — query-contract (experimental)
+- `store-feed-projection/1` — query-contract (experimental)
+
+Semantic sources and ownership: `.mncs/projections.json`.
 <!-- MNCS:generated:end -->
 
 A machine-native, highly concurrent indexing and query engine for the MNCS ecosystem, providing deterministic incremental indexing across source code, RFCs, artifacts, tests, diagnostics, and project metadata.

@@ -1,6 +1,9 @@
 # mncs-index Roadmap
 
 <!-- MNCS:generated:begin -->
+## Evidence-bound roadmap
+
+- **complete** — Declared ambient projection surfaces satisfy their contract (`mncs-index:projection-conformance`)
 <!-- MNCS:generated:end -->
 
 The roadmap is intentionally proof-driven. A phase advances only when its invariants are demonstrated, not merely when APIs exist.
