@@ -1,0 +1,17 @@
+{
+  "schema_version": "mncs.project-intent/1",
+  "purpose": "A machine-native, highly concurrent indexing and query engine for the MNCS ecosystem, providing deterministic incremental indexing across source code, RFCs, artifacts, tests, diagnostics, and project metadata.",
+  "entry": [
+    "python3 -m pytest tests -q"
+  ],
+  "milestones": [
+    {
+      "id": "mncs-index:projection-conformance",
+      "title": "Declared ambient projection surfaces satisfy their contract",
+      "subject_slot": "declarations",
+      "evidence": "projection-conformance",
+      "dependencies": [],
+      "blockers": []
+    }
+  ]
+}

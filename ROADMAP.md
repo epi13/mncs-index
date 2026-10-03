@@ -1,5 +1,8 @@
 # mncs-index Roadmap
 
+<!-- MNCS:generated:begin -->
+<!-- MNCS:generated:end -->
+
 The roadmap is intentionally proof-driven. A phase advances only when its invariants are demonstrated, not merely when APIs exist.
 
 ## Phase 0 — Foundation
