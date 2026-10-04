@@ -36,7 +36,7 @@
       "required": true
     },
     {
-      "contract": "mncs.store.persistent-state/1",
+      "contract": "mncs.store.persistent-state",
       "envelope": {
         "op": "exact",
         "version": "1"
@@ -53,6 +53,6 @@
   "purpose": "A machine-native, highly concurrent indexing and query engine for the MNCS ecosystem, providing deterministic incremental indexing across source code, RFCs, artifacts, tests, diagnostics, and project metadata.",
   "repository": "mncs-index",
   "schema_version": "mncs.project-view/1",
-  "source_identity": "sha256:645af5f210646efb50c99119ab22c173cf436798f4fd792f01a9e4b1efac6f89",
+  "source_identity": "sha256:e9841a93d4cef2436db946f2d1b0e7a70e97a10393522910d43ac6539440d17b",
   "structure": {}
 }
